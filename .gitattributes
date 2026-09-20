@@ -1,0 +1,20 @@
+* text=auto
+
+# Unity text assets: force LF and disable automatic merging
+*.cs text eol=lf diff=csharp
+*.unity text eol=lf merge=unityyamlmerge
+*.prefab text eol=lf merge=unityyamlmerge
+*.asset text eol=lf merge=unityyamlmerge
+*.mat text eol=lf merge=unityyamlmerge
+*.meta text eol=lf merge=unityyamlmerge
+*.controller text eol=lf merge=unityyamlmerge
+*.anim text eol=lf merge=unityyamlmerge
+
+# Binary assets (enable Git LFS for these if the project grows)
+*.png binary
+*.jpg binary
+*.psd binary
+*.fbx binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
