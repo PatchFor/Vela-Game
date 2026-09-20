@@ -16,6 +16,7 @@ namespace Vela.Player
         [SerializeField] private float dashSpeed = 18f;
         [SerializeField] private float dashDuration = 0.15f;
         [SerializeField] private float dashCooldown = 0.7f;
+        [SerializeField] private float dashInvulnerabilityBonus = 0.1f;
 
         [Header("Gravity")]
         [SerializeField] private float gravity = -25f;
@@ -24,6 +25,7 @@ namespace Vela.Player
         [SerializeField] private Transform cameraPivot;
 
         private CharacterController controller;
+        private Health health;
         private Vector3 planarVelocity;
         private Vector3 dashDirection;
         private float verticalVelocity;
@@ -41,6 +43,7 @@ namespace Vela.Player
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            health = GetComponent<Health>();
         }
 
         private void Update()
@@ -57,6 +60,11 @@ namespace Vela.Player
                     : transform.forward;
                 dashTimeRemaining = dashDuration;
                 dashCooldownRemaining = dashCooldown;
+
+                if (health != null)
+                {
+                    health.GrantInvulnerability(dashDuration + dashInvulnerabilityBonus);
+                }
             }
 
             if (dashTimeRemaining > 0f)

@@ -4,6 +4,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Vela.CameraRig;
+using Vela.Core;
+using Vela.Enemies;
 using Vela.Gameplay;
 using Vela.Player;
 
@@ -30,6 +32,8 @@ namespace Vela.EditorTools
             var obstacleMaterial = GetOrCreateMaterial("Obstacle", new Color(0.31f, 0.35f, 0.44f));
             var playerMaterial = GetOrCreateMaterial("Player", new Color(0.95f, 0.72f, 0.28f));
             var shardMaterial = GetOrCreateMaterial("Shard", new Color(0.35f, 0.85f, 0.95f));
+            var healthOrbMaterial = GetOrCreateMaterial("HealthOrb", new Color(0.40f, 0.90f, 0.50f));
+            var monsterMaterial = GetOrCreateMaterial("Monster", new Color(0.78f, 0.26f, 0.32f));
 
             BuildArena(groundMaterial, wallMaterial, obstacleMaterial);
             var player = BuildPlayer(playerMaterial);
@@ -38,6 +42,8 @@ namespace Vela.EditorTools
 
             SetUpLight();
             BuildShards(shardMaterial);
+            BuildHealthOrbs(healthOrbMaterial);
+            BuildMonsters(monsterMaterial);
 
             new GameObject("GameManager").AddComponent<PrototypeGameManager>();
 
@@ -101,8 +107,82 @@ namespace Vela.EditorTools
             nose.transform.localScale = new Vector3(0.25f, 0.25f, 0.4f);
             nose.GetComponent<MeshRenderer>().sharedMaterial = material;
 
+            player.AddComponent<Health>();
             player.AddComponent<IsometricPlayerController>();
             return player;
+        }
+
+        private static void BuildMonsters(Material material)
+        {
+            var spawns = new[]
+            {
+                new Vector3(-10f, 1.1f, 10f),
+                new Vector3(10f, 1.1f, 9f),
+                new Vector3(11f, 1.1f, -9f),
+            };
+
+            var root = new GameObject("Monsters");
+
+            for (var i = 0; i < spawns.Length; i++)
+            {
+                var monster = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                monster.name = $"Monster_{i}";
+                monster.transform.SetParent(root.transform, true);
+                monster.transform.position = spawns[i];
+                monster.GetComponent<MeshRenderer>().sharedMaterial = material;
+                Object.DestroyImmediate(monster.GetComponent<CapsuleCollider>());
+
+                var controller = monster.AddComponent<CharacterController>();
+                controller.height = 2f;
+                controller.radius = 0.5f;
+                controller.center = Vector3.zero;
+                controller.stepOffset = 0.35f;
+
+                var horn = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                horn.name = "FacingMarker";
+                Object.DestroyImmediate(horn.GetComponent<BoxCollider>());
+                horn.transform.SetParent(monster.transform, false);
+                horn.transform.localPosition = new Vector3(0f, 0.35f, 0.55f);
+                horn.transform.localScale = new Vector3(0.22f, 0.22f, 0.45f);
+                horn.GetComponent<MeshRenderer>().sharedMaterial = material;
+
+                monster.AddComponent<MonsterAI>();
+            }
+        }
+
+        private static void BuildHealthOrbs(Material material)
+        {
+            var positions = new[]
+            {
+                new Vector3(-13f, 1f, 0f),
+                new Vector3(13f, 1f, 2f),
+                new Vector3(0f, 1f, -12f),
+            };
+
+            var root = new GameObject("HealthOrbs");
+
+            for (var i = 0; i < positions.Length; i++)
+            {
+                var orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                orb.name = $"HealthOrb_{i}";
+                orb.transform.SetParent(root.transform, true);
+                orb.transform.position = positions[i];
+                orb.transform.localScale = Vector3.one * 0.6f;
+                orb.GetComponent<MeshRenderer>().sharedMaterial = material;
+                orb.GetComponent<SphereCollider>().isTrigger = true;
+
+                var collectible = orb.AddComponent<Collectible>();
+                ConfigureHealthOrb(collectible);
+            }
+        }
+
+        private static void ConfigureHealthOrb(Collectible collectible)
+        {
+            var serialized = new SerializedObject(collectible);
+            serialized.FindProperty("scoreValue").intValue = 0;
+            serialized.FindProperty("healAmount").intValue = 1;
+            serialized.FindProperty("countsTowardGoal").boolValue = false;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static Camera SetUpCamera(Transform target)
