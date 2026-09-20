@@ -30,30 +30,42 @@ namespace Vela.Core
             }
         }
 
-        public static bool DashPressed
+        /// Move 1 — quick slash. Left mouse or J.
+        public static bool Attack1Pressed
         {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var keyboard = Keyboard.current;
-                return keyboard != null && keyboard.spaceKey.wasPressedThisFrame;
-#else
-                return Input.GetKeyDown(KeyCode.Space);
-#endif
-            }
+            get { return KeyPressed(KeyCode.J) || MousePressed(0); }
+        }
+
+        /// Move 2 — lunging thrust. Right mouse or K.
+        public static bool Attack2Pressed
+        {
+            get { return KeyPressed(KeyCode.K) || MousePressed(1); }
+        }
+
+        /// Move 3 — heavy spin. Middle mouse or L.
+        public static bool Attack3Pressed
+        {
+            get { return KeyPressed(KeyCode.L) || MousePressed(2); }
+        }
+
+        public static bool DodgePressed
+        {
+            get { return KeyPressed(KeyCode.Space) || KeyPressed(KeyCode.LeftShift); }
+        }
+
+        public static bool PickupPressed
+        {
+            get { return KeyPressed(KeyCode.F); }
         }
 
         public static bool RestartPressed
         {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var keyboard = Keyboard.current;
-                return keyboard != null && keyboard.rKey.wasPressedThisFrame;
-#else
-                return Input.GetKeyDown(KeyCode.R);
-#endif
-            }
+            get { return KeyPressed(KeyCode.R); }
+        }
+
+        public static bool HelpPressed
+        {
+            get { return KeyPressed(KeyCode.H); }
         }
 
         /// -1 when the camera should swing one step left, +1 one step right, 0 otherwise.
@@ -61,18 +73,53 @@ namespace Vela.Core
         {
             get
             {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var keyboard = Keyboard.current;
-                if (keyboard == null) return 0f;
-                if (keyboard.qKey.wasPressedThisFrame) return -1f;
-                if (keyboard.eKey.wasPressedThisFrame) return 1f;
+                if (KeyPressed(KeyCode.Q)) return -1f;
+                if (KeyPressed(KeyCode.E)) return 1f;
                 return 0f;
-#else
-                if (Input.GetKeyDown(KeyCode.Q)) return -1f;
-                if (Input.GetKeyDown(KeyCode.E)) return 1f;
-                return 0f;
-#endif
             }
+        }
+
+        private static bool KeyPressed(KeyCode key)
+        {
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return false;
+
+            switch (key)
+            {
+                case KeyCode.J: return keyboard.jKey.wasPressedThisFrame;
+                case KeyCode.K: return keyboard.kKey.wasPressedThisFrame;
+                case KeyCode.L: return keyboard.lKey.wasPressedThisFrame;
+                case KeyCode.F: return keyboard.fKey.wasPressedThisFrame;
+                case KeyCode.R: return keyboard.rKey.wasPressedThisFrame;
+                case KeyCode.H: return keyboard.hKey.wasPressedThisFrame;
+                case KeyCode.Q: return keyboard.qKey.wasPressedThisFrame;
+                case KeyCode.E: return keyboard.eKey.wasPressedThisFrame;
+                case KeyCode.Space: return keyboard.spaceKey.wasPressedThisFrame;
+                case KeyCode.LeftShift: return keyboard.leftShiftKey.wasPressedThisFrame;
+                default: return false;
+            }
+#else
+            return Input.GetKeyDown(key);
+#endif
+        }
+
+        private static bool MousePressed(int button)
+        {
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+            var mouse = Mouse.current;
+            if (mouse == null) return false;
+
+            switch (button)
+            {
+                case 0: return mouse.leftButton.wasPressedThisFrame;
+                case 1: return mouse.rightButton.wasPressedThisFrame;
+                case 2: return mouse.middleButton.wasPressedThisFrame;
+                default: return false;
+            }
+#else
+            return Input.GetMouseButtonDown(button);
+#endif
         }
     }
 }

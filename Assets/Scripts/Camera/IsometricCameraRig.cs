@@ -20,6 +20,7 @@ namespace Vela.CameraRig
         [SerializeField] private float yawSmoothSpeed = 8f;
 
         private Vector3 followVelocity;
+        private Vector3 shakeOffset;
         private float currentYaw;
         private float desiredYaw;
 
@@ -56,9 +57,17 @@ namespace Vela.CameraRig
             var focus = target.position + targetOffset;
             var wanted = focus - rotation * Vector3.forward * distance;
 
-            transform.position = Application.isPlaying
-                ? Vector3.SmoothDamp(transform.position, wanted, ref followVelocity, followSmoothTime)
+            Vector3 settled = Application.isPlaying
+                ? Vector3.SmoothDamp(transform.position - shakeOffset, wanted, ref followVelocity, followSmoothTime)
                 : wanted;
+
+            // Shake is added on top of the follow position and taken back off next
+            // frame, so it never accumulates into the smoothing.
+            shakeOffset = Application.isPlaying
+                ? rotation * ScreenShake.Sample(Time.unscaledDeltaTime)
+                : Vector3.zero;
+
+            transform.position = settled + shakeOffset;
             transform.rotation = rotation;
         }
 
