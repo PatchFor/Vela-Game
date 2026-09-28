@@ -1,0 +1,333 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=24 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_k8pxt"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_kolot"]
+[ext_resource type="Resource" path="res://data/items/warden_plate.tres" id="3_romue"]
+[ext_resource type="Resource" path="res://data/items/crown.tres" id="4_7qkc3"]
+[ext_resource type="Resource" path="res://data/items/plate.tres" id="5_kyjfy"]
+[ext_resource type="Resource" path="res://data/items/helm.tres" id="6_8qvmn"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="7_x42xv"]
+[ext_resource type="Script" path="res://scripts/config/loot_table.gd" id="8_ym7dl"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="9_6tdg6"]
+[ext_resource type="Resource" path="res://data/monsters/bat.tres" id="10_scp8e"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="11_o7sdu"]
+[ext_resource type="Texture2D" path="res://art/HollowWarden.png" id="12_jlks2"]
+
+[sub_resource type="Resource" id="Resource_dr13n"]
+script = ExtResource("1_k8pxt")
+name = "Great Sweep"
+kind = 0
+weight = 2.0
+min_range = 0.0
+max_range = 4.0
+cooldown = 2.2
+windup = 0.75
+active = 0.12
+recovery = 0.7
+track = true
+track_speed = 150.0
+damage = 20
+knockback = 14.0
+hit_weight = 3
+radius = 4.0
+arc = 160.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.3, 0.2, 0.55)
+
+[sub_resource type="Resource" id="Resource_w87ah"]
+script = ExtResource("1_k8pxt")
+name = "Shoulder Charge"
+kind = 2
+weight = 1.5
+min_range = 6.0
+max_range = 16.0
+cooldown = 5.0
+windup = 1.0
+active = 1.0
+recovery = 1.0
+track = true
+track_speed = 90.0
+damage = 24
+knockback = 18.0
+hit_weight = 4
+radius = 1.5
+arc = 100.0
+dash_speed = 17.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.3, 0.2, 0.55)
+
+[sub_resource type="Resource" id="Resource_ycqea"]
+script = ExtResource("1_k8pxt")
+name = "Blade Fan"
+kind = 3
+weight = 1.0
+min_range = 4.0
+max_range = 14.0
+cooldown = 4.0
+windup = 0.8
+active = 0.05
+recovery = 0.7
+track = true
+track_speed = 120.0
+damage = 12
+knockback = 5.0
+hit_weight = 2
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 5
+spread = 60.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 11.0
+proj_range = 16.0
+proj_size = 0.35
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(0.5, 0.9, 1, 0.5)
+
+[sub_resource type="Resource" id="Resource_kn70q"]
+script = ExtResource("8_ym7dl")
+gold_chance = 1.0
+gold_min = 80
+gold_max = 120
+guaranteed = Array[ExtResource("2_kolot")]([ExtResource("3_romue")])
+rolls = 3
+nothing_weight = 0.5
+items = Array[ExtResource("2_kolot")]([ExtResource("4_7qkc3"), ExtResource("5_kyjfy"), ExtResource("6_8qvmn"), ExtResource("7_x42xv")])
+weights = PackedFloat32Array(1, 1, 1, 2)
+
+[sub_resource type="Resource" id="Resource_vy828"]
+script = ExtResource("9_6tdg6")
+name = "Phase I — The Warden Wakes"
+starts_at = 1.0
+tint = Color(1, 1, 1, 1)
+sprite_scale = 1.0
+transition = 0.0
+announcement = ""
+shockwave_radius = 0.0
+shockwave_damage = 10
+shockwave_knockback = 14.0
+summons = Array[Resource]([])
+move_speed = 2.8
+decision_delay = 0.6
+attacks = Array[ExtResource("1_k8pxt")]([SubResource("Resource_dr13n"), SubResource("Resource_w87ah"), SubResource("Resource_ycqea")])
+
+[sub_resource type="Resource" id="Resource_oars7"]
+script = ExtResource("1_k8pxt")
+name = "Great Sweep"
+kind = 0
+weight = 2.0
+min_range = 0.0
+max_range = 4.2
+cooldown = 1.6
+windup = 0.55
+active = 0.12
+recovery = 0.55
+track = true
+track_speed = 200.0
+damage = 24
+knockback = 15.0
+hit_weight = 3
+radius = 4.2
+arc = 180.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.3, 0.2, 0.55)
+
+[sub_resource type="Resource" id="Resource_m8kgg"]
+script = ExtResource("1_k8pxt")
+name = "Rampage Charge"
+kind = 2
+weight = 1.5
+min_range = 5.0
+max_range = 18.0
+cooldown = 3.5
+windup = 0.75
+active = 1.0
+recovery = 0.8
+track = true
+track_speed = 120.0
+damage = 26
+knockback = 20.0
+hit_weight = 4
+radius = 1.6
+arc = 100.0
+dash_speed = 20.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.3, 0.2, 0.55)
+
+[sub_resource type="Resource" id="Resource_xs40y"]
+script = ExtResource("1_k8pxt")
+name = "Nova Burst"
+kind = 6
+weight = 1.2
+min_range = 0.0
+max_range = 8.0
+cooldown = 5.0
+windup = 0.9
+active = 0.1
+recovery = 0.8
+track = true
+track_speed = 240.0
+damage = 12
+knockback = 6.0
+hit_weight = 1
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 14
+spread = 0.0
+volleys = 3
+volley_interval = 0.35
+proj_speed = 8.0
+proj_range = 14.0
+proj_size = 0.35
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.4, 0.3, 0.5)
+
+[sub_resource type="Resource" id="Resource_lf8rv"]
+script = ExtResource("1_k8pxt")
+name = "Meteor Rain"
+kind = 4
+weight = 1.0
+min_range = 0.0
+max_range = 16.0
+cooldown = 6.0
+windup = 1.1
+active = 0.1
+recovery = 0.7
+track = false
+track_speed = 240.0
+damage = 20
+knockback = 8.0
+hit_weight = 3
+radius = 2.2
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 5
+aoe_scatter = 4.0
+summon_count = 2
+color = Color(1, 0.3, 0.1, 0.5)
+
+[sub_resource type="Resource" id="Resource_n3ggl"]
+script = ExtResource("1_k8pxt")
+name = "Call the Swarm"
+kind = 7
+weight = 0.5
+min_range = 0.0
+max_range = 16.0
+cooldown = 14.0
+windup = 1.0
+active = 0.1
+recovery = 0.6
+track = true
+track_speed = 240.0
+damage = 10
+knockback = 6.0
+hit_weight = 0
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon = ExtResource("10_scp8e")
+summon_count = 2
+color = Color(0.8, 0.4, 1, 0.5)
+
+[sub_resource type="Resource" id="Resource_pbiss"]
+script = ExtResource("9_6tdg6")
+name = "Phase II — Unbound"
+starts_at = 0.5
+tint = Color(1, 0.55, 0.45, 1)
+sprite_scale = 1.15
+transition = 1.6
+announcement = "The Warden breaks its chains!"
+shockwave_radius = 6.0
+shockwave_damage = 15
+shockwave_knockback = 18.0
+summons = Array[Resource]([ExtResource("10_scp8e"), ExtResource("10_scp8e")])
+move_speed = 3.6
+decision_delay = 0.35
+attacks = Array[ExtResource("1_k8pxt")]([SubResource("Resource_oars7"), SubResource("Resource_m8kgg"), SubResource("Resource_xs40y"), SubResource("Resource_lf8rv"), SubResource("Resource_n3ggl")])
+
+[resource]
+script = ExtResource("11_o7sdu")
+display_name = "The Hollow Warden"
+texture = ExtResource("12_jlks2")
+world_height = 3.6
+shadow_size = 2.6
+hover = 0.0
+max_hp = 1600
+radius = 1.0
+height = 3.0
+poise = 150.0
+stagger_duration = 0.8
+knockback_resist = 0.9
+alert_radius = 0.0
+immortal = false
+death_color = Color(0.5, 0.9, 1, 1)
+movement = 0
+move_speed = 2.8
+detection = 14.0
+leash = 40.0
+preferred = 2.8
+erratic_interval = 0.5
+decision_delay = 0.6
+attacks = Array[ExtResource("1_k8pxt")]([SubResource("Resource_dr13n"), SubResource("Resource_w87ah"), SubResource("Resource_ycqea")])
+loot = SubResource("Resource_kn70q")
+phases = Array[ExtResource("9_6tdg6")]([SubResource("Resource_vy828"), SubResource("Resource_pbiss")])

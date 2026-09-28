@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Down.png" id="1_gc1tt"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_ke2or"]
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Side.png" id="3_ltdur"]
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Up.png" id="4_anxca"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_7xcha"]
+
+[sub_resource type="Resource" id="Resource_2gj8d"]
+script = ExtResource("2_ke2or")
+slot = "feet"
+down = ExtResource("1_gc1tt")
+up = ExtResource("4_anxca")
+side = ExtResource("3_ltdur")
+tint = Color(0.8, 0.84, 0.92, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_7xcha")
+display_name = "Iron Greaves"
+icon = ExtResource("1_gc1tt")
+rarity = 1
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_2gj8d")

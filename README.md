@@ -11,6 +11,10 @@ It includes:
 - Floating damage numbers, hit-stop, screen shake, slash arcs, hit sparks, and dash afterimages.
 - Telegraphed enemy attacks, and scenery that turns see-through when it hides someone.
 
+> **Godot comparison port:** the same prototype also runs in Godot 4.3 under [`godot/`](godot/README.md).
+> For engine advice (online, 2.5D, rendering/physics, and what to invest in) see
+> [`docs/engine-comparison.md`](docs/engine-comparison.md).
+
 Everything you'd want to tune lives in **config assets** (ScriptableObjects) that you edit in
 the Inspector. Every sprite is a placeholder PNG you can replace.
 

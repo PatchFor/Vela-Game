@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_ih212"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="2_uinxj"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="3_5pw4u"]
+[ext_resource type="Texture2D" path="res://art/TrainingDummy.png" id="4_emyf4"]
+
+[resource]
+script = ExtResource("3_5pw4u")
+display_name = "Training Dummy"
+texture = ExtResource("4_emyf4")
+world_height = 1.8
+shadow_size = 1.0
+hover = 0.0
+max_hp = 500
+radius = 0.4
+height = 1.7
+poise = 0.0
+stagger_duration = 0.2
+knockback_resist = 1.0
+alert_radius = 7.0
+immortal = true
+death_color = Color(1, 0.5, 0.4, 1)
+movement = 4
+move_speed = 3.5
+detection = 0.0
+leash = 24.0
+preferred = 1.6
+erratic_interval = 0.5
+decision_delay = 0.35
+attacks = Array[ExtResource("1_ih212")]([])
+phases = Array[ExtResource("2_uinxj")]([])

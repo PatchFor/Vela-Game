@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Down.png" id="1_8m0xx"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_ldiay"]
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Side.png" id="3_td33u"]
+[ext_resource type="Texture2D" path="res://art/Doll_Boots_Up.png" id="4_e3sye"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_x6ht6"]
+
+[sub_resource type="Resource" id="Resource_yh3rx"]
+script = ExtResource("2_ldiay")
+slot = "feet"
+down = ExtResource("1_8m0xx")
+up = ExtResource("4_e3sye")
+side = ExtResource("3_td33u")
+tint = Color(0.5, 0.35, 0.25, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_x6ht6")
+display_name = "Leather Boots"
+icon = ExtResource("1_8m0xx")
+rarity = 0
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_yh3rx")

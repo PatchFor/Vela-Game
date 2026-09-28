@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Vest_Down.png" id="1_nwl1v"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_c436e"]
+[ext_resource type="Texture2D" path="res://art/Doll_Vest_Side.png" id="3_4jawn"]
+[ext_resource type="Texture2D" path="res://art/Doll_Vest_Up.png" id="4_s62x8"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_7hfdf"]
+
+[sub_resource type="Resource" id="Resource_soacb"]
+script = ExtResource("2_c436e")
+slot = "chest"
+down = ExtResource("1_nwl1v")
+up = ExtResource("4_s62x8")
+side = ExtResource("3_4jawn")
+tint = Color(0.65, 0.45, 0.3, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_7hfdf")
+display_name = "Leather Vest"
+icon = ExtResource("1_nwl1v")
+rarity = 0
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_soacb")

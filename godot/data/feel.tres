@@ -1,0 +1,117 @@
+[gd_resource type="Resource" script_class="FeelConfig" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/impact_profile.gd" id="1_hoenc"]
+[ext_resource type="Script" path="res://scripts/config/feel_config.gd" id="2_76qen"]
+
+[sub_resource type="Resource" id="Resource_ejna7"]
+script = ExtResource("1_hoenc")
+label = "Finisher"
+hit_stop_mult = 1.3
+hit_stop_bonus = 0.05
+extra_shake = 0.2
+zoom_punch = 0.06
+squash = 0.42
+tremble_time = 0.2
+tremble_amount = 0.14
+knockback_mult = 1.3
+spark_mult = 2.4
+impact_ring = true
+ring_radius = 2.0
+dust = 12
+number_scale = 1.55
+number_color = Color(1, 0.65, 0.35, 1)
+
+[sub_resource type="Resource" id="Resource_uqg88"]
+script = ExtResource("1_hoenc")
+label = "Heavy"
+hit_stop_mult = 1.2
+hit_stop_bonus = 0.03
+extra_shake = 0.12
+zoom_punch = 0.03
+squash = 0.32
+tremble_time = 0.14
+tremble_amount = 0.1
+knockback_mult = 1.15
+spark_mult = 1.8
+impact_ring = true
+ring_radius = 1.4
+dust = 6
+number_scale = 1.3
+number_color = Color(1, 0.8, 0.55, 1)
+
+[sub_resource type="Resource" id="Resource_4kdmt"]
+script = ExtResource("1_hoenc")
+label = "Light"
+hit_stop_mult = 1.0
+hit_stop_bonus = 0.0
+extra_shake = 0.0
+zoom_punch = 0.0
+squash = 0.15
+tremble_time = 0.06
+tremble_amount = 0.04
+knockback_mult = 1.0
+spark_mult = 0.8
+impact_ring = false
+ring_radius = 1.2
+dust = 0
+number_scale = 0.9
+number_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="Resource_ftnso"]
+script = ExtResource("1_hoenc")
+label = "Medium"
+hit_stop_mult = 1.1
+hit_stop_bonus = 0.01
+extra_shake = 0.04
+zoom_punch = 0.0
+squash = 0.22
+tremble_time = 0.09
+tremble_amount = 0.06
+knockback_mult = 1.0
+spark_mult = 1.2
+impact_ring = false
+ring_radius = 1.2
+dust = 0
+number_scale = 1.05
+number_color = Color(1, 0.97, 0.88, 1)
+
+[resource]
+script = ExtResource("2_76qen")
+hit_stop_mode = 0
+hit_stop_scale = 1.0
+shake_scale = 1.0
+zoom_punch_scale = 1.0
+knockback_scale = 1.0
+enemy_damage_scale = 1.0
+light = SubResource("Resource_4kdmt")
+medium = SubResource("Resource_ftnso")
+heavy = SubResource("Resource_uqg88")
+finisher = SubResource("Resource_ejna7")
+crit_hit_stop_bonus = 0.05
+crit_extra_shake = 0.15
+crit_zoom = 0.06
+crit_slow_time = 0.12
+crit_slow_scale = 0.35
+crit_color = Color(1, 0.85, 0.2, 1)
+crit_number_scale = 1.5
+break_color = Color(0.4, 0.85, 1, 1)
+break_hit_stop = 0.08
+punish_mult = 1.5
+punish_color = Color(1, 0.55, 0.85, 1)
+counter_color = Color(0.5, 0.85, 1, 1)
+hurt_hit_stop = 0.1
+hurt_shake = 0.4
+hurt_zoom = 0.04
+blink_rate = 16.0
+flash_time = 0.07
+hurt_tint = Color(1, 0.45, 0.45, 1)
+hurt_tint_time = 0.18
+font_size = 48
+rise = 1.6
+number_life = 0.8
+taken_color = Color(1, 0.3, 0.3, 1)
+heal_color = Color(0.4, 1, 0.5, 1)
+shake_max_offset = 0.6
+shake_decay = 2.2
+kill_hit_stop = 0.06
+combo_timeout = 1.6

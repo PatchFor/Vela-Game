@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Down.png" id="1_qnk8v"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_rfwfl"]
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Side.png" id="3_h1cgl"]
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Up.png" id="4_ov2mj"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_kkog6"]
+
+[sub_resource type="Resource" id="Resource_6n6x1"]
+script = ExtResource("2_rfwfl")
+slot = "chest"
+down = ExtResource("1_qnk8v")
+up = ExtResource("4_ov2mj")
+side = ExtResource("3_h1cgl")
+tint = Color(0.45, 0.55, 0.85, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_kkog6")
+display_name = "Warden's Plate"
+icon = ExtResource("1_qnk8v")
+rarity = 3
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_6n6x1")

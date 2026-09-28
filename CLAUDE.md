@@ -30,6 +30,7 @@ Assets/Editor/             Vela.Editor.asmdef — scene builder, placeholder art
 Assets/Tests/EditMode/     Vela.Tests.EditMode.asmdef — NUnit EditMode tests
 Assets/Config/             Tuning assets (committed). Designers edit these, not code.
 docs/                      Plan, specs, art pipeline
+godot/                     One-off Godot 4.3 comparison port (own README; tests: godot/tests/run.sh)
 .claude/agents/            Role definitions for the agent team
 ```
 
