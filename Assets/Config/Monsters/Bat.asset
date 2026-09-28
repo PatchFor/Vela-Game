@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344d35084abc146a7b5f51e767a1909b, type: 3}
+  m_Name: Bat
+  m_EditorClassIdentifier: 
+  displayName: Cave Bat
+  visual:
+    sprite: {fileID: 21300000, guid: 2ad837f7f901d4a8c99924516a1505df, type: 3}
+    idleFrames: []
+    moveFrames: []
+    attackFrames: []
+    hurtFrames: []
+    framesPerSecond: 8
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    worldHeight: 0.9
+    artFacesRight: 1
+    shadowSize: 0.8
+    hoverHeight: 0.7
+    moveBob: 0
+    idleBreath: 0.03
+    moveLean: 12
+  maxHealth: 18
+  colliderRadius: 0.35
+  colliderHeight: 0.9
+  poise: 0
+  staggerDuration: 0.25
+  knockbackResistance: 0
+  groupAlertRadius: 10
+  deathBurstColor: {r: 0.6, g: 0.4, b: 0.9, a: 1}
+  behaviour:
+    movement: 3
+    moveSpeed: 5.5
+    turnSpeed: 540
+    detectionRange: 11
+    leashRange: 24
+    preferredDistance: 2.5
+    erraticInterval: 0.45
+    attackDecisionDelay: 0.3
+    attacks:
+    - name: Dive
+      kind: 1
+      weight: 1
+      minRange: 0
+      maxRange: 4
+      cooldown: 1.2
+      windup: 0.35
+      active: 0.22
+      recovery: 0.45
+      trackDuringWindup: 1
+      trackTurnSpeed: 400
+      damage: 6
+      knockback: 3
+      radius: 0.7
+      arcDegrees: 100
+      dashSpeed: 14
+      projectileCount: 1
+      spreadDegrees: 0
+      volleys: 1
+      volleyInterval: 0.15
+      projectileSpeed: 10
+      projectileRange: 14
+      projectileSize: 0.3
+      aoeCount: 1
+      aoeScatter: 0
+      summon: {fileID: 0}
+      summonCount: 2
+      showTelegraph: 1
+      color: {r: 0.8, g: 0.4, b: 1, a: 0.5}
+  immortal: 0

@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64796dc7b05eb43aba568d363f69136f, type: 3}
+  m_Name: Sword
+  m_EditorClassIdentifier: 
+  displayName: Sword
+  uiColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+  icon: {fileID: 0}
+  critChance: 0.15
+  critMultiplier: 1.75
+  combo:
+  - name: Slash
+    kind: 0
+    damage: 12
+    damageVariance: 0.1
+    windup: 0.05
+    active: 0.08
+    recovery: 0.2
+    range: 2.3
+    arcDegrees: 130
+    lungeDistance: 0.5
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 3
+    stagger: 8
+    hitStop: 0.045
+    cameraShake: 0.08
+    moveSpeedMultiplier: 0.2
+    superArmor: 0
+    slashColor: {r: 0.8, g: 0.95, b: 1, a: 1}
+    slashWidth: 0.6
+    slashDuration: 0.13
+    reverseSwing: 0
+  - name: Backslash
+    kind: 0
+    damage: 12
+    damageVariance: 0.1
+    windup: 0.05
+    active: 0.08
+    recovery: 0.2
+    range: 2.3
+    arcDegrees: 130
+    lungeDistance: 0.5
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 3
+    stagger: 8
+    hitStop: 0.045
+    cameraShake: 0.08
+    moveSpeedMultiplier: 0.2
+    superArmor: 0
+    slashColor: {r: 0.8, g: 0.95, b: 1, a: 1}
+    slashWidth: 0.6
+    slashDuration: 0.13
+    reverseSwing: 1
+  - name: Thrust Finisher
+    kind: 0
+    damage: 22
+    damageVariance: 0.1
+    windup: 0.1
+    active: 0.1
+    recovery: 0.35
+    range: 2.8
+    arcDegrees: 70
+    lungeDistance: 1.4
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 9
+    stagger: 25
+    hitStop: 0.09
+    cameraShake: 0.2
+    moveSpeedMultiplier: 0.1
+    superArmor: 0
+    slashColor: {r: 1, g: 1, b: 1, a: 1}
+    slashWidth: 0.9
+    slashDuration: 0.16
+    reverseSwing: 0
+  comboResetTime: 0.45
+  inputBufferTime: 0.25
+  repeatWhileHeld: 0
+  canDashCancel: 1
+  hasChargedAttack: 1
+  chargeTime: 0.55
+  chargeMoveSpeedMultiplier: 0.5
+  chargedAttack:
+    name: Dash Strike
+    kind: 0
+    damage: 40
+    damageVariance: 0.1
+    windup: 0
+    active: 0.18
+    recovery: 0.35
+    range: 2.4
+    arcDegrees: 100
+    lungeDistance: 5.5
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 12
+    stagger: 40
+    hitStop: 0.12
+    cameraShake: 0.35
+    moveSpeedMultiplier: 0
+    superArmor: 1
+    slashColor: {r: 0.6, g: 0.9, b: 1, a: 1}
+    slashWidth: 1
+    slashDuration: 0.2
+    reverseSwing: 0
