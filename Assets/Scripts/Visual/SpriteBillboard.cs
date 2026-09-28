@@ -23,7 +23,7 @@ namespace Vela.Visual
     /// 2.5D look: a flat sprite standing on a 3D floor, turned to face the locked camera,
     /// with a blob shadow and procedural bob/squash so single-frame art still feels alive.
     /// Put it on the character root (pivot at the feet); it builds its own children.
-    public class SpriteBillboard : MonoBehaviour
+    public class SpriteBillboard : MonoBehaviour, Vela.Core.IHitPausable
     {
         [SerializeField] private CharacterVisual visual = new CharacterVisual();
 
@@ -58,6 +58,10 @@ namespace Vela.Visual
         private Vector2 squashVelocity;
 
         private float airHeight;
+        private float pausedUntil;
+
+        /// Hold the current pose (squash, animation frame) for a local hit-stop.
+        public void HitPause(float seconds) => pausedUntil = Mathf.Max(pausedUntil, Time.unscaledTime + seconds);
 
         public SpriteRenderer Renderer => spriteRenderer;
         public CharacterVisual Visual => visual;
@@ -250,15 +254,17 @@ namespace Vela.Visual
         {
             if (spriteRenderer == null) return;
 
-            stateTime += Time.deltaTime;
+            var paused = Time.unscaledTime < pausedUntil;
+            var dt = paused ? 0f : Time.deltaTime;
+            stateTime += dt;
             ApplySprite(CurrentFrame());
 
             // Squash spring back toward 1.
             const float stiffness = 320f;
             const float damping = 18f;
             var accel = (Vector2.one - squash) * stiffness - squashVelocity * damping;
-            squashVelocity += accel * Time.deltaTime;
-            squash += squashVelocity * Time.deltaTime;
+            squashVelocity += accel * dt;
+            squash += squashVelocity * dt;
 
             // Procedural motion for single-frame art.
             var bob = 0f;

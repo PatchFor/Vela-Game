@@ -39,6 +39,23 @@ namespace Vela.Config
         public float afterImageLifetime = 0.25f;
         public Color afterImageColor = new Color(0.4f, 0.9f, 1f, 0.6f);
 
+        [Header("Perfect dodge (dash through an attack at the last moment)")]
+        [Tooltip("A hit that lands within this many seconds after the dash starts counts as perfect.")]
+        public float perfectDodgeWindow = 0.15f;
+        [Tooltip("Online later: extra seconds added to the window to forgive network delay. Keep 0 offline.")]
+        public float perfectDodgeLatencyAllowance;
+        [Tooltip("World slow-motion after a perfect dodge (single-player hit-stop mode only).")]
+        public float perfectDodgeSlowMo = 0.5f;
+        [Range(0.05f, 1f)] public float perfectDodgeSlowMoScale = 0.3f;
+        [Tooltip("Dash is ready again immediately after a perfect dodge.")]
+        public bool perfectDodgeResetsDash = true;
+        [Tooltip("After a perfect dodge, your hits deal bonus damage for this long.")]
+        public float counterWindow = 1.5f;
+        public float counterDamageMultiplier = 1.5f;
+        [Tooltip("Hits inside the counter window always crit.")]
+        public bool counterAlwaysCrits = true;
+        public Color perfectDodgeColor = new Color(0.5f, 0.85f, 1f);
+
         [Header("Jump links (dash near a marked edge to leap across)")]
         public float jumpArcHeight = 1.8f;
         public float jumpDuration = 0.55f;

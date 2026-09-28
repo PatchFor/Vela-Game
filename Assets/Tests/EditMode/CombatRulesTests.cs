@@ -39,6 +39,53 @@ namespace Vela.Tests
         }
 
         [Test]
+        public void Invulnerable_RaisesEvaded_AndTakesNoDamage()
+        {
+            var go = new GameObject("dodger");
+            var health = go.AddComponent<Health>();
+            health.Configure(10, Team.Player, 0f);
+            health.GrantInvulnerability(1f);
+            var evaded = 0;
+            health.Evaded += (h, info) => evaded++;
+
+            var dealt = health.ApplyDamage(new DamageInfo { Amount = 5, SourceTeam = Team.Enemy });
+
+            Assert.IsFalse(dealt);
+            Assert.AreEqual(1, evaded, "perfect dodge relies on this event");
+            Assert.AreEqual(10, health.Current);
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void SeededRandom_IsRepeatable()
+        {
+            VelaRandom.UseSeed(42);
+            var a = new[] { VelaRandom.Value, VelaRandom.Value, VelaRandom.Value };
+            VelaRandom.UseSeed(42);
+            var b = new[] { VelaRandom.Value, VelaRandom.Value, VelaRandom.Value };
+            VelaRandom.Source = null;
+
+            CollectionAssert.AreEqual(a, b, "server-owned rolls must be replayable");
+        }
+
+        [Test]
+        public void RangeInclusive_HitsBothEnds()
+        {
+            VelaRandom.UseSeed(7);
+            int lo = int.MaxValue, hi = int.MinValue;
+            for (var i = 0; i < 5000; i++)
+            {
+                var v = VelaRandom.RangeInclusive(3, 8);
+                lo = Mathf.Min(lo, v);
+                hi = Mathf.Max(hi, v);
+            }
+            VelaRandom.Source = null;
+
+            Assert.AreEqual(3, lo);
+            Assert.AreEqual(8, hi);
+        }
+
+        [Test]
         public void SameTeam_CannotHurt()
         {
             var go = new GameObject("ally");

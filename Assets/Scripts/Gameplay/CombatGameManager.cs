@@ -16,6 +16,7 @@ namespace Vela.Gameplay
         [SerializeField] private CameraConfig cameraConfig;
         [SerializeField] private FxLibrary fx;
         [SerializeField] private Items.LootConfig lootConfig;
+        [SerializeField] private Audio.SfxLibrary sfxLibrary;
         [Tooltip("Where B teleports the player (the boss arena entrance).")]
         [SerializeField] private Transform bossArenaEntrance;
 
@@ -33,6 +34,8 @@ namespace Vela.Gameplay
         public bool ShowHelp { get; private set; } = true;
         public bool BossDefeated { get; private set; }
         public int Kills { get; private set; }
+
+        public void ConfigureAudio(Audio.SfxLibrary library) => sfxLibrary = library;
 
         public void ConfigureLoot(Items.LootConfig newLoot, Items.LootTable newDebugLoot, Items.ItemDefinition[] newWardrobe)
         {
@@ -61,6 +64,8 @@ namespace Vela.Gameplay
             VelaSettings.Camera = cameraConfig;
             VelaSettings.Fx = fx;
             VelaSettings.Loot = lootConfig;
+            VelaSettings.Sfx = sfxLibrary;
+            HitStop.Mode = VelaSettings.Feel.hitStopMode;
             HudMessages.Clear();
         }
 

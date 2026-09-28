@@ -256,6 +256,7 @@ namespace Vela.UI
                 var inventory = player.GetComponent<PlayerInventory>();
                 var gold = inventory != null ? inventory.Inventory.Gold : 0;
                 var line = $"Gold: {gold}    Kills: {manager.Kills}";
+                if (player.CounterActive) line += "    COUNTER!";
                 if (manager.GodMode) line += "    GOD MODE";
                 GUI.Label(new Rect(rect.x, dashRect.yMax + 8f * s, 400f * s, 26f * s), line, small);
             }

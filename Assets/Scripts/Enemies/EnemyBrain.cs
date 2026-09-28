@@ -350,6 +350,11 @@ namespace Vela.Enemies
 
             CreateTelegraphs();
             if (billboard != null) billboard.Punch(new Vector2(0.85f, 1.2f));
+
+            // Audio telegraph: heavy attacks get a deeper, longer cue.
+            var weight = DamageInfo.Resolve(attack.hitWeight, 0f, attack.damage);
+            Audio.Sfx.Play(weight >= HitWeight.Heavy ? Audio.SfxEvent.EnemyWindupHeavy : Audio.SfxEvent.EnemyWindup,
+                transform.position, 0.8f);
         }
 
         private void CreateTelegraphs()
@@ -699,7 +704,8 @@ namespace Vela.Enemies
             FxManager.Ring(transform.position, 0.3f, config.colliderRadius * 2f + 1.5f, 0.3f, feel.breakColor);
             FxManager.HitSpark(transform.position + Vector3.up * height * 0.6f, Vector3.up, feel.breakColor, 14);
             if (billboard != null) billboard.HurtTint(feel.breakColor, config.staggerDuration);
-            HitStop.Request(feel.breakHitStop * feel.hitStopScale);
+            HitStop.Request(feel.breakHitStop * feel.hitStopScale, billboard);
+            Audio.Sfx.Play(Audio.SfxEvent.Break, transform.position);
             CameraShake.Add(feel.breakShake);
         }
 
@@ -722,12 +728,13 @@ namespace Vela.Enemies
 
             var feel = VelaSettings.Feel;
             FxManager.DeathBurst(transform.position + Vector3.up * 0.8f, config.deathBurstColor, feel.deathBurstCount);
-            HitStop.Request(feel.killHitStop * feel.hitStopScale);
+            HitStop.Request(feel.killHitStop * feel.hitStopScale, billboard);
+            Audio.Sfx.Play(Audio.SfxEvent.Kill, transform.position);
             CameraShake.Add(feel.killShake);
 
             if (config is BossConfig)
             {
-                HitStop.Request(0.25f * feel.hitStopScale);
+                HitStop.Request(0.25f * feel.hitStopScale, billboard);
                 HitStop.SlowMotion(feel.bossKillSlowMo, feel.bossKillSlowMoScale);
                 CameraShake.Add(0.6f);
                 CameraShake.Punch(0.12f);

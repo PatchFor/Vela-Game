@@ -51,6 +51,12 @@ namespace Vela.Config
     [CreateAssetMenu(menuName = "Vela/Combat Feel Config", fileName = "CombatFeel")]
     public class CombatFeelConfig : ScriptableObject
     {
+        [Header("Online readiness")]
+        [Tooltip("GlobalTimeScale: hit-stop / slow-mo freeze the whole game (single-player feel). " +
+                 "LocalVisual: only the attacker and victim hold their pose, nothing slows down (online-safe). " +
+                 "Switch to LocalVisual to preview how combat will feel in multiplayer.")]
+        public HitStopMode hitStopMode = HitStopMode.GlobalTimeScale;
+
         [Header("Global multipliers")]
         [Tooltip("0 disables hit-stop.")]
         public float hitStopScale = 1f;
@@ -87,6 +93,16 @@ namespace Vela.Config
         public Color breakColor = new Color(0.4f, 0.85f, 1f);
         public float breakHitStop = 0.08f;
         public float breakShake = 0.2f;
+
+        [Header("Punish (hitting a staggered enemy)")]
+        public float punishDamageMultiplier = 1.5f;
+        public string punishLabel = "PUNISH";
+        public Color punishColor = new Color(1f, 0.55f, 0.85f);
+
+        [Header("Counter (hits after a perfect dodge)")]
+        public string counterLabel = "COUNTER";
+        public Color counterColor = new Color(0.5f, 0.85f, 1f);
+        public string perfectDodgeLabel = "PERFECT";
 
         [Header("Kills")]
         public float killHitStop = 0.06f;

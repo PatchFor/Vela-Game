@@ -112,6 +112,19 @@ namespace Vela.EditorTools
                 GetOrCreate<SkillConfig>($"{Root}/Skills/FanOfKnives.asset", FanOfKnives)
             };
 
+            // ---------------- audio: one empty slot per event (placeholders play until you add clips)
+            set.Sfx = GetOrCreate<Audio.SfxLibrary>($"{Root}/Audio/SfxLibrary.asset", lib => { });
+            var entries = new List<Audio.SfxLibrary.Entry>(set.Sfx.entries ?? new Audio.SfxLibrary.Entry[0]);
+            foreach (Audio.SfxEvent sfx in System.Enum.GetValues(typeof(Audio.SfxEvent)))
+            {
+                if (set.Sfx.Find(sfx) == null) entries.Add(new Audio.SfxLibrary.Entry { sfx = sfx });
+            }
+            if (entries.Count != (set.Sfx.entries?.Length ?? 0))
+            {
+                set.Sfx.entries = entries.ToArray();
+                EditorUtility.SetDirty(set.Sfx);
+            }
+
             // ---------------- player
             var player = set.Player;
             if (player.rig == null || Overwrite) player.rig = rig;

@@ -19,6 +19,7 @@ namespace Vela.Player
 
         private PlayerController player;
         private PlayerInventory inventory;
+        private PlayerInputReader input;
 
         public WorldItem Hovered { get; private set; }
 
@@ -26,6 +27,7 @@ namespace Vela.Player
         {
             player = GetComponent<PlayerController>();
             inventory = GetComponent<PlayerInventory>();
+            input = PlayerInputReader.For(gameObject);
         }
 
         private void Update()
@@ -37,13 +39,13 @@ namespace Vela.Player
 
             if (!player.IsAlive) return;
 
-            if (Hovered != null && VelaInput.MouseDown(VelaInput.MouseButton.Left))
+            if (Hovered != null && input.Current.LeftDown)
             {
-                VelaInput.ConsumeClick(VelaInput.MouseButton.Left);
+                input.ConsumeLeftClick();
                 RequestPickUp(Hovered);
             }
 
-            if (VelaInput.PickUpPressed)
+            if (input.Current.PickUp)
             {
                 var nearest = Nearest(VelaSettings.Loot.pickupRange);
                 if (nearest != null) PickUp(nearest);
@@ -69,7 +71,7 @@ namespace Vela.Player
         /// Tries to put the item in the bag. Handles full and partially-full bags.
         public void PickUp(WorldItem item)
         {
-            if (item == null || !item.CanPickUp || item.IsGold) return;
+            if (item == null || !item.CanPickUp || item.IsGold || !item.CanBeTakenBy(gameObject)) return;
 
             var stack = item.Stack;
             var added = inventory.Inventory.TryAdd(stack.Item, stack.Count);
@@ -78,6 +80,7 @@ namespace Vela.Player
             {
                 HudMessages.Show("Inventory full", Warning);
                 item.Nudge();
+                Audio.Sfx.Play(Audio.SfxEvent.InventoryFull);
                 return;
             }
 
@@ -90,6 +93,7 @@ namespace Vela.Player
             }
 
             item.Collect();
+            Audio.Sfx.Play(stack.Item.rarity >= Rarity.Rare ? Audio.SfxEvent.PickupRare : Audio.SfxEvent.Pickup);
             HudMessages.Show(stack.Count > 1 ? $"+ {stack.Item.displayName} x{stack.Count}" : $"+ {stack.Item.displayName}", color);
         }
 

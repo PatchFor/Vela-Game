@@ -23,6 +23,7 @@ namespace Vela.Player
         private PaperDoll paperDoll;
         private PlayerCombat combat;
         private PlayerTargeting targeting;
+        private PlayerInputReader input;
 
         private Vector3 planarVelocity;
         private Vector3 dashDirection;
@@ -49,6 +50,14 @@ namespace Vela.Player
         private Action walkArrived;
 
         public event Action Dashed;
+        public event Action PerfectDodged;
+
+        private float dashStartedAt = -10f;
+        private float lastPerfectDodge = -10f;
+        private float counterUntil = -10f;
+
+        /// Inside the post-perfect-dodge counter window (bonus damage, forced crits).
+        public bool CounterActive => Time.time < counterUntil;
 
         public PlayerConfig Config
         {
@@ -94,6 +103,7 @@ namespace Vela.Player
             paperDoll = GetComponent<PaperDoll>();
             combat = GetComponent<PlayerCombat>();
             targeting = GetComponent<PlayerTargeting>();
+            input = PlayerInputReader.For(gameObject);
 
             health.Configure(config.maxHealth, Team.Player, config.invulnerabilityAfterHit);
             if (billboard != null) billboard.Setup(config.visual);
@@ -106,11 +116,13 @@ namespace Vela.Player
         private void OnEnable()
         {
             health.Damaged += OnDamaged;
+            health.Evaded += OnEvaded;
         }
 
         private void OnDisable()
         {
             health.Damaged -= OnDamaged;
+            health.Evaded -= OnEvaded;
         }
 
         private void OnDestroy()
@@ -176,8 +188,8 @@ namespace Vela.Player
             var dt = Time.deltaTime;
             dashCooldownRemaining = Mathf.Max(0f, dashCooldownRemaining - dt);
 
-            var input = VelaInput.Move;
-            var moveDir = CameraRelative(input);
+            var commands = input.Current;
+            var moveDir = CameraRelative(commands.Move);
             var busy = combat != null && combat.IsBusy;
 
             // Walk-to: only while there's no other intent.
@@ -187,7 +199,7 @@ namespace Vela.Player
                 else moveDir = WalkDirection();
             }
 
-            if (VelaInput.DashPressed && CanDash())
+            if (commands.Dash && CanDash())
             {
                 CancelWalk();
                 var intended = moveDir.sqrMagnitude > 0.01f ? moveDir.normalized : facing;
@@ -269,6 +281,8 @@ namespace Vela.Player
         private void StartDash(Vector3 moveDir)
         {
             dashDirection = moveDir.sqrMagnitude > 0.01f ? moveDir.normalized : facing;
+            dashStartedAt = Time.time;
+            Audio.Sfx.Play(Audio.SfxEvent.Dash, transform.position);
             dashTimeRemaining = config.dashDuration;
             dashCooldownRemaining = config.dashCooldown;
             afterImageTimer = 0f;
@@ -299,6 +313,7 @@ namespace Vela.Player
 
             Face(jumpTo - jumpFrom);
             health.GrantInvulnerability(config.jumpDuration + 0.1f);
+            Audio.Sfx.Play(Audio.SfxEvent.Jump, transform.position);
             FxManager.Dust(transform.position, 10, new Color(0.85f, 0.85f, 0.8f, 0.8f));
             if (billboard != null)
             {
@@ -338,6 +353,7 @@ namespace Vela.Player
             FxManager.Dust(transform.position, 14, new Color(0.85f, 0.85f, 0.8f, 0.85f));
             FxManager.Ring(transform.position, 0.2f, 1.3f, 0.2f, new Color(1f, 1f, 1f, 0.6f));
             CameraShake.Add(0.1f);
+            Audio.Sfx.Play(Audio.SfxEvent.Land, transform.position);
         }
 
         // ------------------------------------------------------------------ helpers
@@ -368,12 +384,7 @@ namespace Vela.Player
 
         private void UpdateAim()
         {
-            var cam = Camera.main;
-            if (cam == null) return;
-
-            var ray = cam.ScreenPointToRay(VelaInput.MousePosition);
-            var ground = new Plane(Vector3.up, transform.position);
-            if (ground.Raycast(ray, out var enter)) AimPoint = ray.GetPoint(enter);
+            AimPoint = input.Current.AimPoint;
         }
 
         private void UpdateVisualState()
@@ -384,6 +395,33 @@ namespace Vela.Player
             else if (combat != null && combat.IsBusy) billboard.SetState(VisualState.Attack);
             else if (planarVelocity.sqrMagnitude > 0.5f) billboard.SetState(VisualState.Move);
             else billboard.SetState(VisualState.Idle);
+        }
+
+        /// A hit was stopped by i-frames. If the dash had only just started, it's a perfect dodge.
+        private void OnEvaded(Health self, DamageInfo info)
+        {
+            if (info.SourceTeam == Team.Player || !IsDashing) return;
+
+            var window = config.perfectDodgeWindow + config.perfectDodgeLatencyAllowance;
+            if (Time.time - dashStartedAt > window) return;
+            if (Time.time - lastPerfectDodge < 0.3f) return;
+
+            lastPerfectDodge = Time.time;
+            counterUntil = Time.time + config.counterWindow;
+            if (config.perfectDodgeResetsDash) dashCooldownRemaining = 0f;
+
+            var feel = VelaSettings.Feel;
+            var color = config.perfectDodgeColor;
+            HitStop.SlowMotion(config.perfectDodgeSlowMo, config.perfectDodgeSlowMoScale);
+            CameraShake.Punch(0.05f);
+            FxManager.Ring(transform.position, 0.3f, 3f, 0.4f, color);
+            FxManager.Ring(transform.position, 0.1f, 1.6f, 0.25f, Color.white);
+            SpawnAfterImages(new Color(color.r, color.g, color.b, 0.9f), 0.5f);
+            if (billboard != null) billboard.Flash(color, 0.1f);
+            DamageNumbers.Spawn(transform.position + Vector3.up * 2.4f, feel.perfectDodgeLabel, color, 1.3f);
+            Audio.Sfx.Play(Audio.SfxEvent.PerfectDodge, transform.position);
+
+            PerfectDodged?.Invoke();
         }
 
         private void OnDamaged(Health self, DamageInfo info)

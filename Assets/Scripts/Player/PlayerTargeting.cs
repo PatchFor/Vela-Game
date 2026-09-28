@@ -23,6 +23,7 @@ namespace Vela.Player
         private static readonly Color HoverColor = new Color(1f, 1f, 1f, 0.45f);
 
         private PlayerController player;
+        private PlayerInputReader input;
         private TargetReticle lockReticle;
         private TargetReticle hoverReticle;
         private readonly List<EnemyBrain> candidates = new List<EnemyBrain>();
@@ -35,6 +36,7 @@ namespace Vela.Player
         private void Awake()
         {
             player = GetComponent<PlayerController>();
+            input = PlayerInputReader.For(gameObject);
         }
 
         private void Start()
@@ -89,16 +91,17 @@ namespace Vela.Player
                 if (!Target.IsAlive || far) Release();
             }
 
-            if (VelaInput.LockOnPressed)
+            var commands = input.Current;
+            if (commands.LockOn)
             {
                 if (Target != null && (Hovered == null || Hovered == Target)) Release();
                 else Lock(Hovered != null ? Hovered : BestCandidate(config.lockOnRange));
             }
 
-            if (VelaInput.NextTargetPressed) Cycle(config.lockOnRange);
+            if (commands.NextTarget) Cycle(config.lockOnRange);
 
             // Clicking a monster locks it; the click still goes on to attack.
-            if (Hovered != null && VelaInput.MouseDown(VelaInput.MouseButton.Left)) Lock(Hovered);
+            if (Hovered != null && commands.LeftDown) Lock(Hovered);
 
             UpdateReticles();
         }

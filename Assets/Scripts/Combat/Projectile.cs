@@ -27,6 +27,9 @@ namespace Vela.Combat
 
             /// Called per victim to build the hit (damage, crit roll, knockback...).
             public System.Func<Health, DamageInfo> MakeHit;
+
+            /// Called after a hit actually deals damage (hit-confirm, sounds...).
+            public System.Action<Health> OnLanded;
         }
 
         private static readonly RaycastHit[] Hits = new RaycastHit[16];
@@ -102,7 +105,11 @@ namespace Vela.Combat
                     if (!health.IsAlive) continue;
 
                     hitAlready.Add(health);
-                    if (spec.MakeHit != null) health.ApplyDamage(spec.MakeHit(health));
+                    var landed = spec.MakeHit != null && health.ApplyDamage(spec.MakeHit(health));
+
+                    // Dodged (i-frames): the projectile flies on through.
+                    if (!landed && health.IsInvulnerable) continue;
+                    if (landed) spec.OnLanded?.Invoke(health);
                     if (pierceLeft-- <= 0)
                     {
                         Stop(hit.point);

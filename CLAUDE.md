@@ -13,10 +13,12 @@ say what changed and which numbers to tune.
 Assets/Scripts/            Vela.Runtime.asmdef (all gameplay code)
   Core/        Health, DamageInfo, HitStop, VelaInput (ALL input goes through here)
   Config/      ScriptableObject configs: Weapon, Skill, Player, Monster, Boss, Camera, CombatFeel
-  Player/      PlayerController (move/dash/jump/walk-to), PlayerCombat, PlayerTargeting,
+  Player/      PlayerInputReader → PlayerCommands (all player input as data),
+               PlayerController (move/dash/jump/walk-to/perfect dodge), PlayerCombat, PlayerTargeting,
                PlayerInventory, ItemPickupController
   Enemies/     EnemyBrain (data-driven AI), BossController, EnemyFactory
   Combat/      CombatUtility, Projectile, DamageFeedback, ComboTracker
+  Audio/       Sfx (pooled player), SfxLibrary (clip slots), ProceduralSfx (placeholder sounds)
   Items/       ItemDefinition, Inventory (pure C#), LootTable, LootConfig, WorldItem, LootSpawner
   Visual/      SpriteBillboard (4-way facing), PaperDoll, CharacterRig, EquipmentVisual
   FX/          FxManager, DamageNumbers, Telegraph, SlashArc, RingPulse, TargetReticle
@@ -50,6 +52,11 @@ docs/                      Plan, specs, art pipeline
 8. **One task = one branch = one PR**, with tests. Don't edit files outside your role's folders
    (see `.claude/agents/`); open an issue / leave a note for the owner instead.
 9. Keep code comments to *why*, match the existing style (file-level `///` summary per class).
+10. **Online-ready** (see `docs/architecture/online-readiness.md`): gameplay reads `PlayerCommands`,
+    not `VelaInput`; gameplay rolls use `VelaRandom`; feedback listens to events; freezes go
+    through `HitStop.Request(seconds, participants)`; timing windows get a latency allowance field.
+11. **Every gameplay event plays a sound** through `Sfx.Play(SfxEvent...)`. Add a new `SfxEvent`
+    (and a placeholder in `ProceduralSfx`) instead of referencing clips from code.
 
 ## Running tests
 

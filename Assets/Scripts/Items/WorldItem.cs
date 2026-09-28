@@ -45,6 +45,11 @@ namespace Vela.Items
         public static IReadOnlyList<WorldItem> All => AllItems;
 
         public ItemStack Stack => stack;
+
+        /// Who may pick this up (null = anyone). Groundwork for personal loot online.
+        public GameObject Owner { get; set; }
+
+        public bool CanBeTakenBy(GameObject who) => Owner == null || Owner == who;
         public bool IsGold => gold > 0;
         public int Gold => gold;
         public Rarity Rarity => stack.Item != null ? stack.Item.rarity : Rarity.Common;
@@ -241,6 +246,7 @@ namespace Vela.Items
                 var color = loot.RarityColor(Rarity);
                 FxManager.Ring(transform.position, 0.2f, 1.2f + 0.3f * (int)Rarity, 0.35f, color);
                 FxManager.HitSpark(transform.position + Vector3.up * 0.4f, Vector3.up, color, 6 + 4 * (int)Rarity);
+                Audio.Sfx.Play(Audio.SfxEvent.PickupRare, transform.position, 0.6f);
             }
         }
 
@@ -306,6 +312,7 @@ namespace Vela.Items
                 var inventory = player.GetComponent<PlayerInventory>();
                 if (inventory != null) inventory.Inventory.AddGold(gold);
                 DamageNumbers.Spawn(player.transform.position + Vector3.up * 2f, $"+{gold} G", LabelColor, 0.85f);
+                Audio.Sfx.Play(Audio.SfxEvent.Gold, player.transform.position);
             }
 
             Destroy(gameObject);

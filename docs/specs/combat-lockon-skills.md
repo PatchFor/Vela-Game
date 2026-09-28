@@ -33,6 +33,18 @@ Each attack has a `hitWeight` (Light / Medium / Heavy / Finisher). CombatFeel.as
 weight to hit-stop, shake, zoom punch, squash, tremble, knockback, sparks, rings and number size.
 Crits add freeze + slow-mo + star burst + gold "CRITICAL" number. Poise break shows "BREAK!".
 
+## Rewards for skill (fun layer)
+| Mechanic | Rule | Tuning |
+|---|---|---|
+| **Perfect dodge** | A hit stopped by dash i-frames within `perfectDodgeWindow` of the dash start → slow-mo, "PERFECT", dash cooldown reset, counter window | Player.asset: perfectDodge*, counter* |
+| **Counter** | Hits during `counterWindow` deal ×`counterDamageMultiplier`, always crit, +1 hit weight, "COUNTER" | Player.asset |
+| **Hit-confirm cancel** | After an attack connects (+`hitConfirmDelay`), cancel into next combo hit, dash or skill — even on no-dash-cancel weapons | Weapon: hitConfirmCancel, hitConfirmDelay |
+| **Punish** | Hits on a staggered enemy deal ×`punishDamageMultiplier`, +1 hit weight, "PUNISH" | CombatFeel.asset |
+
+## Sound
+Every event plays through `Sfx.Play`. Placeholder sounds are generated until clips are added to
+`Assets/Config/Audio/SfxLibrary.asset` (several clips per event = random pick, pitch ±8%).
+
 ## Edge cases
 | Case | Expected | Test |
 |---|---|---|
@@ -47,6 +59,13 @@ Crits add freeze + slow-mo + star burst + gold "CRITICAL" number. Poise break sh
 | E with one monster in range | Stays on it | PlayMode |
 | Hit during super-armor attack | Damage taken, no stagger/knockback | PlayMode |
 | Combo input after comboResetTime | Restarts at step 1 | PlayMode |
+| Dash through an attack late in the dash (after the window) | Normal dodge, no PERFECT | PlayMode |
+| Hit during post-hurt i-frames (not dashing) | No perfect dodge | EditMode (Evaded event) + PlayMode |
+| Two attacks dodged within 0.3 s | Only one PERFECT | PlayMode |
+| Greatsword whiff | No dash cancel (weapon rule) | PlayMode |
+| Greatsword hit | Dash cancel opens after hitConfirmDelay | PlayMode |
+| Hit that causes the stagger | Not a punish (only later hits are) | PlayMode |
+| Projectile vs dashing player | Passes through, can trigger perfect dodge | PlayMode |
 
 ## Tuning
 Weapons: `Assets/Config/Weapons/*` · Skills: `Assets/Config/Skills/*` · Feel: `CombatFeel.asset` ·

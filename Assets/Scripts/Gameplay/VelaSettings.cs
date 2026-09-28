@@ -11,6 +11,7 @@ namespace Vela.Gameplay
         private static CameraConfig camera;
         private static FxLibrary fx;
         private static Items.LootConfig loot;
+        private static Audio.SfxLibrary sfx;
         private static Material fallbackUnlit;
         private static Material fallbackAdditive;
         private static Material fallbackFlash;
@@ -53,6 +54,16 @@ namespace Vela.Gameplay
                 return loot;
             }
             set => loot = value;
+        }
+
+        public static Audio.SfxLibrary Sfx
+        {
+            get
+            {
+                if (sfx == null) sfx = ScriptableObject.CreateInstance<Audio.SfxLibrary>();
+                return sfx;
+            }
+            set => sfx = value;
         }
 
         public static Material UnlitMaterial

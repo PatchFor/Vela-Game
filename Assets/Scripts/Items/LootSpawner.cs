@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vela.Core;
 using Vela.Gameplay;
 
 namespace Vela.Items
@@ -11,11 +12,13 @@ namespace Vela.Items
         private static readonly List<ItemStack> Buffer = new List<ItemStack>();
         private static readonly RaycastHit[] Hits = new RaycastHit[8];
 
-        public static void Drop(LootTable table, Vector3 origin)
+        /// `owner`: who may pick these up. Null = anyone (single-player). Online later, pass each
+        /// player and spawn one private copy per player (personal loot).
+        public static void Drop(LootTable table, Vector3 origin, GameObject owner = null)
         {
             if (table == null) return;
 
-            var gold = table.Roll(() => Random.value, Buffer);
+            var gold = table.Roll(VelaRandom.Source, Buffer);
             var piles = gold <= 0 ? 0 : gold >= 30 ? 3 : gold >= 10 ? 2 : 1;
             var total = Buffer.Count + piles;
             if (total == 0) return;
@@ -30,14 +33,14 @@ namespace Vela.Items
                 var amount = p == piles - 1 ? remainingGold : Mathf.Max(1, gold / piles);
                 remainingGold -= amount;
                 WorldItem.Spawn(ItemStack.Empty, amount, origin, Landing(origin, startAngle, index, total, loot),
-                    0.02f * index);
+                    0.02f * index).Owner = owner;
                 index++;
             }
 
             foreach (var stack in Buffer)
             {
                 var delay = 0.02f * index + loot.rarityDelay * (int)stack.Item.rarity;
-                WorldItem.Spawn(stack, 0, origin, Landing(origin, startAngle, index, total, loot), delay);
+                WorldItem.Spawn(stack, 0, origin, Landing(origin, startAngle, index, total, loot), delay).Owner = owner;
                 index++;
             }
         }

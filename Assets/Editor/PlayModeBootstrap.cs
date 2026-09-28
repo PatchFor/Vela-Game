@@ -99,7 +99,7 @@ namespace Vela.EditorTools
             if (EditorPrefs.GetBool(key, false)) return false;
 
             var rebuild = EditorUtility.DisplayDialog("Vela: combat scene is out of date",
-                "The code has new level content (river, jump links, loot, inventory, paper-doll player).\n\n" +
+                "The code has new content (sounds, perfect dodge, input commands, and more).\n\n" +
                 "Rebuild CombatPrototype.unity now? Changes you made to that scene by hand will be lost.\n" +
                 "(Config assets in Assets/Config are kept.)",
                 "Rebuild", "Keep old scene");

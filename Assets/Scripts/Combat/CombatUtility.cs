@@ -23,7 +23,7 @@ namespace Vela.Combat
             for (var i = 0; i < count; i++)
             {
                 var health = Overlaps[i].GetComponentInParent<Health>();
-                if (health == null || !health.CanBeHurtBy(team)) continue;
+                if (health == null || !health.IsTargetableBy(team)) continue;
                 if (alreadyHit != null && alreadyHit.Contains(health)) continue;
 
                 var offset = health.transform.position - origin;
@@ -78,7 +78,7 @@ namespace Vela.Combat
 
         public static int RollDamage(int baseDamage, float variance)
         {
-            var roll = baseDamage * (1f + Random.Range(-variance, variance));
+            var roll = baseDamage * (1f + VelaRandom.Range(-variance, variance));
             return Mathf.Max(1, Mathf.RoundToInt(roll));
         }
 

@@ -33,7 +33,7 @@ namespace Vela.EditorTools
 
         /// Bump when the generated scene changes. PlayModeBootstrap offers a rebuild when the
         /// saved scene is older than this.
-        public const int SceneVersion = 2;
+        public const int SceneVersion = 3;
         public const string VersionFile = "Assets/Scenes/.combat_scene_version";
 
         [MenuItem("Vela/Build Combat Prototype Scene", priority = 0)]
@@ -106,6 +106,7 @@ namespace Vela.EditorTools
             var manager = new GameObject("GameManager").AddComponent<CombatGameManager>();
             manager.Configure(configs.Feel, configs.Camera, configs.Fx, bossEntrance);
             manager.ConfigureLoot(configs.Loot, configs.DebugLoot, configs.Wardrobe);
+            manager.ConfigureAudio(configs.Sfx);
             var hud = new GameObject("HUD");
             hud.AddComponent<CombatHUD>();
             hud.AddComponent<InventoryUI>();
@@ -473,6 +474,7 @@ namespace Vela.EditorTools
             controller.stepOffset = 0.35f;
             controller.slopeLimit = 50f;
 
+            player.AddComponent<PlayerInputReader>();
             player.AddComponent<Health>();
             player.AddComponent<SpriteBillboard>();
             player.AddComponent<DamageFeedback>();

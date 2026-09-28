@@ -75,6 +75,18 @@ you bind to its buttons.
 | `T` / `B` / `G` / `R` | Respawn monsters / go to the boss / god mode / restart |
 | `H` / `F1` | Show or hide the help text |
 
+**Combat rewards:**
+- **Perfect dodge:** dash through an attack right as it lands. The world slows down, the
+  dash is ready again, and you get a short **counter** window (bonus damage, guaranteed crits).
+- **Hit-confirm:** once a hit connects, you can cancel into the next hit, a dash or a skill early.
+- **Punish:** hits on a staggered (BREAK!) enemy deal bonus damage.
+
+**Sound:** every event has a generated placeholder sound. Drop real clips into
+`Assets/Config/Audio/SfxLibrary.asset` to replace them.
+
+**Online readiness:** see `docs/architecture/online-readiness.md`. To preview how combat
+would feel in multiplayer, set `CombatFeel.asset → hitStopMode = LocalVisual`.
+
 Plans, specs, and the agent team: see `docs/plan/week-1.md`, `docs/specs/`, `docs/art-pipeline.md`,
 `CLAUDE.md` and `.claude/agents/`.
 

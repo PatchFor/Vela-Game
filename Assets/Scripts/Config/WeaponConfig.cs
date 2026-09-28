@@ -100,6 +100,13 @@ namespace Vela.Config
         [Tooltip("Dash can cancel an attack's recovery.")]
         public bool canDashCancel = true;
 
+        [Header("Hit-confirm cancel")]
+        [Tooltip("Once an attack connects, you may cancel it early into the next combo hit, a dash or a skill " +
+                 "(even on weapons that normally can't dash-cancel). Rewards landing hits over mashing.")]
+        public bool hitConfirmCancel = true;
+        [Tooltip("Seconds after the hit connects before the cancel opens (lets the hit-stop read).")]
+        public float hitConfirmDelay = 0.06f;
+
         [Header("Charged attack (hold right click, release when full)")]
         public bool hasChargedAttack = true;
         public float chargeTime = 0.6f;

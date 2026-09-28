@@ -26,6 +26,12 @@ namespace Vela.Core
     {
         public int Amount;
         public bool IsCrit;
+
+        /// Hit on a staggered (poise-broken) enemy: bonus damage and a "PUNISH" callout.
+        public bool IsPunish;
+
+        /// Landed inside a perfect-dodge counter window.
+        public bool IsCounter;
         public Team SourceTeam;
         public GameObject Source;
         public HitWeight Weight;
