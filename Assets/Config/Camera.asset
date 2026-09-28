@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d6a4c41b4b294be9b6338d38a8f0210, type: 3}
+  m_Name: Camera
+  m_EditorClassIdentifier: 
+  pitch: 50
+  yaw: 0
+  orthographic: 0
+  fieldOfView: 30
+  orthoSizePerDistance: 0.28
+  minDistance: 10
+  maxDistance: 34
+  startDistance: 20
+  zoomStep: 2.5
+  zoomSmoothTime: 0.12
+  followSmoothTime: 0.1
+  targetOffset: {x: 0, y: 0.8, z: 0}
+  aimLookAhead: 1.5
+  maxShakeOffset: 0.6
+  maxShakeRoll: 2
+  shakeFrequency: 28
+  shakeDecay: 2.2

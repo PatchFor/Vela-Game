@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64796dc7b05eb43aba568d363f69136f, type: 3}
+  m_Name: Greatsword
+  m_EditorClassIdentifier: 
+  displayName: Greatsword
+  uiColor: {r: 1, g: 0.65, b: 0.3, a: 1}
+  icon: {fileID: 0}
+  critChance: 0.357
+  critMultiplier: 2
+  combo:
+  - name: Cleave
+    kind: 0
+    damage: 34
+    damageVariance: 0.1
+    windup: 0.28
+    active: 0.12
+    recovery: 0.45
+    range: 3.2
+    arcDegrees: 170
+    lungeDistance: 0.8
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 10
+    stagger: 35
+    hitStop: 0.11
+    cameraShake: 0.3
+    moveSpeedMultiplier: 0.05
+    superArmor: 1
+    slashColor: {r: 1, g: 0.8, b: 0.5, a: 1}
+    slashWidth: 1.3
+    slashDuration: 0.2
+    reverseSwing: 0
+  - name: Overhead Smash
+    kind: 0
+    damage: 52
+    damageVariance: 0.1
+    windup: 0.36
+    active: 0.12
+    recovery: 0.6
+    range: 3.4
+    arcDegrees: 110
+    lungeDistance: 1
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 14
+    stagger: 60
+    hitStop: 0.16
+    cameraShake: 0.45
+    moveSpeedMultiplier: 0
+    superArmor: 1
+    slashColor: {r: 1, g: 0.7, b: 0.4, a: 1}
+    slashWidth: 1.5
+    slashDuration: 0.22
+    reverseSwing: 1
+  comboResetTime: 0.1
+  inputBufferTime: 0.5
+  repeatWhileHeld: 0
+  canDashCancel: 0
+  hasChargedAttack: 1
+  chargeTime: 0.1
+  chargeMoveSpeedMultiplier: 0.25
+  chargedAttack:
+    name: Whirlwind
+    kind: 0
+    damage: 600
+    damageVariance: 0.1
+    windup: 0.05
+    active: 0.2
+    recovery: 0.6
+    range: 3.6
+    arcDegrees: 360
+    lungeDistance: 0
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 24
+    projectileRange: 16
+    pierce: 0
+    projectileSize: 0.2
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 16
+    stagger: 80
+    hitStop: 0.14
+    cameraShake: 0.5
+    moveSpeedMultiplier: 0
+    superArmor: 1
+    slashColor: {r: 1, g: 0.6, b: 0.3, a: 1}
+    slashWidth: 1.6
+    slashDuration: 0.3
+    reverseSwing: 0
