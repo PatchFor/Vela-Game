@@ -22,15 +22,26 @@ the Inspector. Every sprite is a placeholder PNG you can replace.
    6000.0.x patch works.
 2. In Unity Hub, choose **Add → Add project from disk** and pick this folder. The first import
    takes a few minutes.
-3. Wait for compilation to finish (no red errors in the Console).
-4. From the menu, choose **Vela → Build Combat Prototype Scene**.
-
-   This generates:
+3. Wait for compilation to finish (no red errors in the Console). If Unity asks to enable
+   the new Input System backend and restart, click **Yes**. The controls work with either
+   backend.
+4. Press **Play**. On the first Play the combat scene is built automatically, then Play
+   starts again. This generates:
    - `Assets/Art/Placeholder/*.png`: pixel-art sprites and tiles
    - `Assets/Config/**`: every config asset (weapons, monsters, boss, camera, feel)
    - `Assets/Materials/*`: world and effect materials
    - `Assets/Scenes/CombatPrototype.unity`: the level, added to Build Settings
-5. Press **Play**.
+
+   After that, Play always starts `CombatPrototype.unity`, whichever scene is open. Turn this
+   off with **Vela → Always Play Combat Scene**. You can also rebuild by hand with
+   **Vela → Build Combat Prototype Scene**.
+
+**If there's no Vela menu, or nothing happens on Play:**
+
+- Open **Window → General → Console** and fix or report the first red error. A compile error
+  stops every script and the menu from loading.
+- If a monster or the player can't be seen but the HUD shows, run
+  **Vela → Regenerate Placeholder Art**.
 
 Rebuilding the scene **keeps your config assets and any sprites you swapped in**. Two other
 menu items help:

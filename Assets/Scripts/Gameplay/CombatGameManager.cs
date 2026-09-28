@@ -50,6 +50,10 @@ namespace Vela.Gameplay
         private void Start()
         {
             spawnPoints = FindObjectsByType<EnemySpawnPoint>(FindObjectsSortMode.None);
+            if (spawnPoints.Length == 0)
+            {
+                Debug.LogWarning("Vela: no EnemySpawnPoints in this scene. Run Vela > Build Combat Prototype Scene.");
+            }
             SpawnAll();
         }
 
