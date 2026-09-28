@@ -74,13 +74,15 @@ namespace Vela.EditorTools
 
         private static void Build()
         {
+            // Create the scene FIRST: NewScene unloads unused assets, which would destroy
+            // configs/materials loaded before it (MissingReferenceException on MonsterConfig).
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
             PlaceholderArt.EnsureFolder("Assets/Scenes");
             PlaceholderArt.EnsureFolder(MaterialsFolder);
 
             BuildMaterials();
             var configs = ConfigDefaults.CreateAll(BuildFxMaterials());
-
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             SetUpLighting();
             var level = new GameObject("Level").transform;

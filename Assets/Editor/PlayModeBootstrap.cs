@@ -56,7 +56,18 @@ namespace Vela.EditorTools
             Debug.Log("Vela: combat scene not found, building it now. Play will start automatically.");
             EditorApplication.delayCall += () =>
             {
-                PrototypeSceneBuilder.BuildScene();
+                try
+                {
+                    PrototypeSceneBuilder.BuildScene();
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogException(e);
+                    EditorUtility.DisplayDialog("Vela", "Building the combat scene failed:\n\n" + e.Message +
+                        "\n\nSee the Console for details.", "OK");
+                    return;
+                }
+
                 ApplyStartScene();
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null) EditorApplication.EnterPlaymode();
             };
