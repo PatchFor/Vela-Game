@@ -8,6 +8,18 @@ namespace Vela.Core
         Enemy
     }
 
+    /// How "big" a hit feels. Each weight has an impact profile in CombatFeelConfig
+    /// (hit-stop, shake, sparks, number size, zoom punch...). Auto picks one from the
+    /// attack's stagger / damage, so older config assets still get sensible feedback.
+    public enum HitWeight
+    {
+        Auto,
+        Light,
+        Medium,
+        Heavy,
+        Finisher
+    }
+
     /// Everything a hit carries: the number shown, and the feel data (knockback, hit-stop,
     /// shake) the attacker's config asked for.
     public struct DamageInfo
@@ -16,6 +28,7 @@ namespace Vela.Core
         public bool IsCrit;
         public Team SourceTeam;
         public GameObject Source;
+        public HitWeight Weight;
 
         /// World point the hit landed (used for sparks and damage numbers).
         public Vector3 HitPoint;
@@ -30,5 +43,15 @@ namespace Vela.Core
 
         public float HitStop;
         public float CameraShake;
+
+        /// Resolves Auto into a concrete weight.
+        public static HitWeight Resolve(HitWeight weight, float stagger, int damage)
+        {
+            if (weight != HitWeight.Auto) return weight;
+            if (stagger >= 60f || damage >= 45) return HitWeight.Finisher;
+            if (stagger >= 30f || damage >= 25) return HitWeight.Heavy;
+            if (stagger >= 15f || damage >= 15) return HitWeight.Medium;
+            return HitWeight.Light;
+        }
     }
 }

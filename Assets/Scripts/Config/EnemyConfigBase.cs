@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Vela.Core;
 
 namespace Vela.Config
 {
@@ -74,6 +75,8 @@ namespace Vela.Config
         [Header("Damage")]
         public int damage = 10;
         public float knockback = 6f;
+        [Tooltip("How hard this hit feels when it lands on the player (shake, hit-stop, zoom). Auto guesses from damage.")]
+        public HitWeight hitWeight = HitWeight.Auto;
 
         [Header("Shape")]
         [Tooltip("Melee reach, AoE radius, or contact radius for lunges/charges.")]

@@ -33,6 +33,14 @@ namespace Vela.Visual
         private Color flashColor = Color.white;
         private Color stateTint = Color.white;
         private Color baseTint = Color.white;
+        private Color hurtTint = Color.white;
+        private float hurtTintUntil;
+        private float hurtTintDuration = 0.1f;
+        private float trembleUntil;
+        private float trembleAmount;
+        private float trembleDuration = 0.1f;
+        private bool blinking;
+        private float blinkRate = 16f;
         private float scaleMultiplier = 1f;
         private bool facingLeft;
         private float fade = 1f;
@@ -79,6 +87,30 @@ namespace Vela.Visual
         {
             flashColor = color;
             flashUntil = Time.time + duration;
+        }
+
+        /// After a flash, fade from `tint` back to normal over `duration` (starts when the flash ends).
+        public void HurtTint(Color tint, float duration)
+        {
+            hurtTint = tint;
+            hurtTintDuration = Mathf.Max(0.01f, duration);
+            hurtTintUntil = Mathf.Max(flashUntil, Time.time) + duration;
+        }
+
+        /// Sideways jitter in real time, so the victim visibly trembles during a freeze-frame.
+        public void Tremble(float amount, float duration)
+        {
+            if (amount <= 0f || duration <= 0f) return;
+            trembleAmount = Mathf.Max(amount, Time.unscaledTime < trembleUntil ? trembleAmount : 0f);
+            trembleDuration = duration;
+            trembleUntil = Time.unscaledTime + duration;
+        }
+
+        /// Blink the sprite (i-frames after the player is hit).
+        public void SetBlink(bool on, float rate)
+        {
+            blinking = on;
+            blinkRate = rate;
         }
 
         /// Kick the squash spring: (1.3, 0.7) = squashed flat, (0.8, 1.25) = stretched tall.
@@ -230,7 +262,7 @@ namespace Vela.Visual
             var sy = baseScale * squash.y * breathe;
             spriteRoot.localScale = new Vector3(sx, sy, baseScale);
             spriteRoot.position = transform.position + spriteRoot.up * (feetOffset * squash.y * breathe)
-                                  + Vector3.up * (bob + Hover());
+                                  + Vector3.up * (bob + Hover()) + TrembleOffset(cam);
 
             spriteRenderer.flipX = visual.artFacesRight ? facingLeft : !facingLeft;
 
@@ -238,8 +270,19 @@ namespace Vela.Visual
             var wanted = flashing ? VelaSettings.FlashMaterial : VelaSettings.UnlitMaterial;
             if (spriteRenderer.sharedMaterial != wanted) spriteRenderer.sharedMaterial = wanted;
 
-            var color = flashing ? flashColor : visual.tint * baseTint * stateTint;
+            var color = visual.tint * baseTint * stateTint;
+            if (flashing)
+            {
+                color = flashColor;
+            }
+            else if (Time.time < hurtTintUntil)
+            {
+                var t = 1f - (hurtTintUntil - Time.time) / hurtTintDuration;
+                color = Color.Lerp(color * hurtTint, color, t * t);
+            }
+
             color.a *= fade;
+            if (blinking && Mathf.Repeat(Time.time * blinkRate, 1f) < 0.5f) color.a *= 0.25f;
             spriteRenderer.color = color;
 
             if (shadowMaterial != null)
@@ -248,6 +291,16 @@ namespace Vela.Visual
                 shadowMaterial.color = new Color(0f, 0f, 0f, 0.4f * fade);
                 UpdateShadow();
             }
+        }
+
+        private Vector3 TrembleOffset(Camera cam)
+        {
+            var now = Time.unscaledTime;
+            if (now >= trembleUntil || cam == null) return Vector3.zero;
+
+            var strength = (trembleUntil - now) / Mathf.Max(0.001f, trembleDuration);
+            var side = Mathf.Sign(Mathf.Sin(now * 110f));
+            return cam.transform.right * (side * trembleAmount * strength);
         }
 
         private float Hover()

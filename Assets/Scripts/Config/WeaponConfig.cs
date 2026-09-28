@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Vela.Core;
 
 namespace Vela.Config
 {
@@ -49,6 +50,9 @@ namespace Vela.Config
         public Color projectileColor = new Color(1f, 0.95f, 0.7f);
 
         [Header("Impact feel")]
+        [Tooltip("Light / Medium / Heavy / Finisher picks the impact profile in CombatFeel (hit-stop, shake, sparks, " +
+                 "number size, zoom punch). Auto guesses from stagger and damage.")]
+        public HitWeight hitWeight = HitWeight.Auto;
         public float knockback = 4f;
         [Tooltip("Poise damage dealt to enemies.")]
         public float stagger = 10f;

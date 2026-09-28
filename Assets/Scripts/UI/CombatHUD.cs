@@ -58,7 +58,9 @@ namespace Vela.UI
             small.fontSize = Mathf.RoundToInt(16 * s);
             center.fontSize = Mathf.RoundToInt(34 * s);
 
-            DrawHurtFlash();
+            DrawScreenEffects();
+            DrawEnemyBars(s);
+            DrawCombo(s);
             DrawPlayer(s);
             DrawWeapons(s);
             DrawCharge(s);
@@ -76,6 +78,26 @@ namespace Vela.UI
             small.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
             center = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             center.normal.textColor = Color.white;
+            comboStyle = new GUIStyle(center) { alignment = TextAnchor.MiddleRight, clipping = TextClipping.Overflow };
+
+            // Transparent middle, opaque edges: used for hurt / low-HP / crit screen effects.
+            const int size = 64;
+            vignette = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (var y = 0; y < size; y++)
+            for (var x = 0; x < size; x++)
+            {
+                var d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(size * 0.5f, size * 0.5f)) / (size * 0.5f);
+                vignette.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.45f, 1.05f, d))));
+            }
+            vignette.Apply();
+        }
+
+        private GUIStyle comboStyle;
+        private Texture2D vignette;
+
+        private void OnDestroy()
+        {
+            if (vignette != null) Destroy(vignette);
         }
 
         private static void Fill(Rect r, Color c)
@@ -94,11 +116,113 @@ namespace Vela.UI
             Fill(new Rect(r.x, r.y, r.width * value, r.height), color);
         }
 
-        private void DrawHurtFlash()
+        private void DrawVignette(Color color)
         {
-            if (Time.unscaledTime >= hurtFlashUntil) return;
-            var t = (hurtFlashUntil - Time.unscaledTime) / hurtFlashDuration;
-            Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.3f * t));
+            var previous = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), vignette, ScaleMode.StretchToFill);
+            GUI.color = previous;
+        }
+
+        private void DrawScreenEffects()
+        {
+            var feel = VelaSettings.Feel;
+            var now = Time.unscaledTime;
+
+            // Low health: slow red pulse on the screen edges.
+            var player = CombatRegistry.Player;
+            if (player != null && player.IsAlive && player.Health.Normalized <= feel.lowHealthWarning)
+            {
+                var pulse = 0.25f + 0.2f * Mathf.Sin(now * 5f);
+                DrawVignette(new Color(0.8f, 0.05f, 0.05f, pulse));
+            }
+
+            // Took a hit: strong red edges plus a faint full-screen tint.
+            if (now < hurtFlashUntil)
+            {
+                var t = (hurtFlashUntil - now) / hurtFlashDuration;
+                DrawVignette(new Color(1f, 0.1f, 0.1f, 0.85f * t));
+                Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.12f * t));
+            }
+
+            // Crit: very short white pop.
+            var critAge = now - ComboTracker.LastCritTime;
+            if (critAge < 0.1f && feel.critScreenFlash > 0f)
+            {
+                var t = 1f - critAge / 0.1f;
+                Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(1f, 1f, 0.9f, feel.critScreenFlash * t));
+                DrawVignette(new Color(feel.critColor.r, feel.critColor.g, feel.critColor.b, 0.5f * t));
+            }
+        }
+
+        /// Small HP bar (and poise bar for armored enemies) over each recently hit monster.
+        private void DrawEnemyBars(float s)
+        {
+            var feel = VelaSettings.Feel;
+            var cam = Camera.main;
+            if (!feel.showEnemyHealthBars || cam == null) return;
+
+            foreach (var enemy in CombatRegistry.Enemies)
+            {
+                if (enemy == null || !enemy.IsAlive || enemy.Config == null) continue;
+                if (enemy.GetComponent<BossController>() != null) continue;
+
+                var age = Time.time - enemy.LastHitTime;
+                if (age > feel.enemyBarLinger) continue;
+
+                var height = enemy.Config.visual.worldHeight + enemy.Config.visual.hoverHeight + 0.35f;
+                var screen = cam.WorldToScreenPoint(enemy.transform.position + Vector3.up * height);
+                if (screen.z < 0f) continue;
+
+                var alpha = Mathf.Clamp01((feel.enemyBarLinger - age) / 0.4f);
+                var w = Mathf.Clamp(enemy.Config.colliderRadius * 110f, 50f, 110f) * s;
+                var r = new Rect(screen.x - w * 0.5f, Screen.height - screen.y, w, 6f * s);
+
+                Fill(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(0f, 0f, 0f, 0.7f * alpha));
+                Fill(r, new Color(1f, 1f, 1f, 0.12f * alpha));
+                Fill(new Rect(r.x, r.y, r.width * enemy.Health.Normalized, r.height),
+                    new Color(0.9f, 0.25f, 0.25f, alpha));
+
+                if (enemy.Config.poise > 0f)
+                {
+                    var p = new Rect(r.x, r.yMax + 3f * s, r.width, 3f * s);
+                    Fill(p, new Color(1f, 1f, 1f, 0.1f * alpha));
+                    var poiseColor = enemy.IsStaggered ? Color.white : feel.breakColor;
+                    var poise = enemy.IsStaggered ? 1f : enemy.PoiseNormalized;
+                    Fill(new Rect(p.x, p.y, p.width * poise, p.height), new Color(poiseColor.r, poiseColor.g, poiseColor.b, alpha));
+                }
+            }
+        }
+
+        private void DrawCombo(float s)
+        {
+            var feel = VelaSettings.Feel;
+            if (!feel.showComboCounter || !ComboTracker.IsActive || ComboTracker.Count < feel.comboMinimum) return;
+
+            var popAge = Time.unscaledTime - ComboTracker.PopTime;
+            var pop = popAge < 0.12f ? Mathf.Lerp(1.5f, 1f, popAge / 0.12f) : 1f;
+            var count = ComboTracker.Count;
+            var color = count >= 30 ? new Color(1f, 0.45f, 0.3f) : count >= 15 ? feel.critColor : Color.white;
+
+            var right = Screen.width - 40f * s;
+            var y = Screen.height * 0.32f;
+            comboStyle.fontSize = Mathf.RoundToInt(64f * s * pop);
+            var shadow = new Rect(right - 400f * s + 3f, y + 3f, 400f * s, 80f * s);
+            var previous = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.7f);
+            GUI.Label(shadow, count.ToString(), comboStyle);
+            GUI.color = color;
+            GUI.Label(new Rect(right - 400f * s, y, 400f * s, 80f * s), count.ToString(), comboStyle);
+
+            comboStyle.fontSize = Mathf.RoundToInt(20f * s);
+            GUI.color = new Color(1f, 1f, 1f, 0.9f);
+            GUI.Label(new Rect(right - 400f * s, y + 62f * s, 400f * s, 30f * s), "HITS", comboStyle);
+            GUI.color = previous;
+
+            var bar = new Rect(right - 120f * s, y + 92f * s, 120f * s, 4f * s);
+            Fill(bar, new Color(1f, 1f, 1f, 0.15f));
+            Fill(new Rect(bar.xMax - bar.width * ComboTracker.TimeLeftNormalized, bar.y,
+                bar.width * ComboTracker.TimeLeftNormalized, bar.height), color);
         }
 
         private void DrawPlayer(float s)

@@ -219,15 +219,61 @@ white "chip" bar so big hits read clearly. Add a third phase by adding an entry 
 
 ### Global feel: `Assets/Config/CombatFeel.asset`
 
+This is the main tuning surface for combat feel.
+
+**Hit weight.** Every attack has a `hitWeight`: `Light`, `Medium`, `Heavy`, `Finisher`, or
+`Auto`, which guesses from stagger and damage. Each weight has an **impact profile** here:
+
+| Field | What it changes |
+| --- | --- |
+| `hitStopMultiplier`, `hitStopBonus` | Freeze-frame length on top of the attack's own `hitStop` |
+| `extraShake`, `zoomPunch` | Camera shake, and a quick zoom-in kick |
+| `squash`, `trembleAmount`, `trembleDuration` | Victim squash, and a sideways tremble that plays during the freeze |
+| `knockbackMultiplier` | How far the victim is pushed |
+| `sparkMultiplier`, `impactRing`, `dustCount` | Particles at the impact point |
+| `numberScale`, `numberColor` | Damage number size and color |
+
+Defaults: light hits are small, snappy and white. Heavy and finisher hits freeze longer,
+zoom the camera, throw rings and dust, and show big orange numbers.
+
+**Critical hits** add on top of the profile:
+- extra freeze, then a short **slow-motion** tail (`critSlowMoDuration`, `critSlowMoScale`)
+- zoom punch, a white/gold screen pop (`critScreenFlash`)
+- a star-shaped spark burst
+- a gold number that hangs, shakes, and carries a `CRITICAL` label
+
+**Poise break.** When enough stagger breaks an armored enemy (poise above 0), it shows
+`BREAK!` in blue with a ring, a freeze and a shake. This is the payoff for heavy attacks: light
+hits won't break a Brute or the boss, heavy ones will. Enemy HP bars show a blue poise meter
+under the HP.
+
+**Player getting hit:**
+- hit-stop, shake and zoom punch
+- red screen edges
+- the sprite flashes white, fades from red, and trembles
+- the sprite blinks during i-frames (`invulnerableBlinkRate`)
+- the screen edges pulse red at low HP (`lowHealthWarning`)
+- your combo resets
+
+**Other settings:**
+- **Damage numbers:** size, rise speed and lifetime. Quick hits on the same target stack upward
+  (`stackWindow`, `stackOffset`) instead of overlapping.
+- **Combo counter:** the count on the right side of the screen. `comboTimeout` is how long
+  before it resets; `comboMinimum` is how many hits before it appears.
+- **Enemy HP bars:** shown for `enemyBarLinger` seconds after an enemy is hit.
+- **Kills:** a small freeze on every kill; a long slow-motion when the boss dies.
 - **Global multipliers:**
-  - `hitStopScale`, `cameraShakeScale`, `knockbackScale`: set any of them to 0 to turn it off.
+  - `hitStopScale`, `cameraShakeScale`, `zoomPunchScale`, `knockbackScale`: set any of them to
+    0 to turn that effect off.
   - `enemyDamageScale`: a difficulty dial.
-- **Player getting hit:** hit-stop, shake, and red screen flash.
-- **Hit flash:** duration, color, and squash on hit.
-- **Damage numbers:**
-  - Font sizes (normal and crit), rise speed, lifetime, sideways scatter.
-  - Colors for damage dealt, crits, damage taken, and heals, plus the crit suffix.
-- **Effect toggles:** slashes, telegraphs, spark counts.
+
+**Player aim assist** (`Player.asset`): melee swings turn toward the nearest enemy within
+`meleeAimAssistAngle` degrees of the cursor, so near misses still connect. Set it to 0 to
+turn it off.
+
+> Upgrading from an earlier build: existing config assets keep their old values, and new
+> fields start at their defaults (`hitWeight = Auto`). To get the tuned weights, run
+> **Vela → Reset Configs To Defaults**.
 
 ## 5. Replacing the placeholder art
 

@@ -53,7 +53,7 @@ namespace Vela.Combat
         }
 
         public static DamageInfo MakeHit(GameObject source, Team team, Health victim, int amount, bool crit,
-            float knockback, float stagger, float hitStop, float shake)
+            float knockback, float stagger, float hitStop, float shake, HitWeight weight = HitWeight.Auto)
         {
             var origin = source != null ? source.transform.position : victim.transform.position;
             var direction = victim.transform.position - origin;
@@ -64,6 +64,7 @@ namespace Vela.Combat
             {
                 Amount = Mathf.Max(1, amount),
                 IsCrit = crit,
+                Weight = DamageInfo.Resolve(weight, stagger, amount),
                 SourceTeam = team,
                 Source = source,
                 HitPoint = victim.transform.position + Vector3.up * 1f,

@@ -30,6 +30,7 @@ namespace Vela.Player
         private float dashCooldownRemaining;
         private float afterImageTimer;
         private float stunnedUntil;
+        private float lastHurtTime = -10f;
         private Vector3 facing = Vector3.back;
 
         public event Action Dashed;
@@ -172,6 +173,13 @@ namespace Vela.Player
 
             ApplyMotion(planarVelocity + extra);
             UpdateVisualState();
+
+            // Blink during post-hit i-frames (not during dash i-frames, which have afterimages).
+            if (billboard != null)
+            {
+                var blink = health.IsInvulnerable && !IsDashing && Time.time - lastHurtTime < config.invulnerabilityAfterHit;
+                billboard.SetBlink(blink, VelaSettings.Feel.invulnerableBlinkRate);
+            }
         }
 
         private bool CanDash()
@@ -229,6 +237,7 @@ namespace Vela.Player
 
         private void OnDamaged(Health self, DamageInfo info)
         {
+            lastHurtTime = Time.time;
             var armored = combat != null && combat.HasSuperArmor;
             if (armored) return;
 

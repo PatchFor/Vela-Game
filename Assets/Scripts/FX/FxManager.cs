@@ -71,6 +71,29 @@ namespace Vela.FX
             }
         }
 
+        /// Star-shaped burst for critical hits: fast radial streaks plus a double ring.
+        public static void CritBurst(Vector3 position, Color color)
+        {
+            var fx = Instance;
+            const int rays = 10;
+            var offset = Random.Range(0f, 360f);
+            for (var i = 0; i < rays; i++)
+            {
+                var angle = offset + 360f / rays * i;
+                var dir = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+                for (var k = 0; k < 3; k++)
+                {
+                    var velocity = (dir + Vector3.up * Random.Range(0.1f, 0.6f)) * (9f + k * 3f);
+                    fx.Emit(fx.sparks, position, velocity, k == 0 ? Color.white : color,
+                        0.14f - k * 0.03f, 0.18f + k * 0.04f);
+                }
+            }
+
+            var ground = new Vector3(position.x, position.y - 0.9f, position.z);
+            Ring(ground, 0.3f, 2.2f, 0.28f, color);
+            Ring(ground, 0.1f, 1.2f, 0.18f, Color.white);
+        }
+
         public static void Dust(Vector3 position, int count, Color color)
         {
             var fx = Instance;

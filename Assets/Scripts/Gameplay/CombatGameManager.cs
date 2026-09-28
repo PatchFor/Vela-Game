@@ -40,6 +40,7 @@ namespace Vela.Gameplay
             Instance = this;
             Time.timeScale = 1f;
             CameraShake.Reset();
+            Combat.ComboTracker.Reset();
             CombatRegistry.Clear();
 
             VelaSettings.Feel = feel;

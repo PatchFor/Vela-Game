@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vela.CameraRig;
 using Vela.Combat;
 using Vela.Config;
 using Vela.Core;
@@ -142,6 +143,15 @@ namespace Vela.Player
                     player.MoveSpeedMultiplier = step.moveSpeedMultiplier;
                     attackDirection = player.AimDirection;
                     player.Face(attackDirection);
+
+                    // Heavy swings glow in the weapon color while winding up: the player reads
+                    // "something big is coming" from their own character.
+                    if (IsHeavy(step) && player.Billboard != null && step.windup > 0f)
+                    {
+                        var progress = 1f - Mathf.Clamp01(phaseTimer / step.windup);
+                        player.Billboard.SetTint(Color.Lerp(Color.white, weapon.uiColor * 1.4f, progress * 0.85f));
+                    }
+
                     if (phaseTimer <= 0f) BeginActive();
                     break;
 
@@ -189,8 +199,7 @@ namespace Vela.Player
             EndAttack(resetCombo: true);
 
             var weapon = CurrentWeapon;
-            DamageNumbers.Spawn(transform.position + Vector3.up * 2.4f, weapon.displayName, weapon.uiColor,
-                VelaSettings.Feel.fontSize);
+            DamageNumbers.Spawn(transform.position + Vector3.up * 2.4f, weapon.displayName, weapon.uiColor, 0.9f);
             FxManager.Ring(transform.position, 0.3f, 1.4f, 0.25f, weapon.uiColor);
         }
 
@@ -264,17 +273,60 @@ namespace Vela.Player
             if (phaseTimer <= 0f) BeginActive();
         }
 
+        private static bool IsHeavy(AttackStep s)
+        {
+            var weight = DamageInfo.Resolve(s.hitWeight, s.stagger, s.damage);
+            return weight == HitWeight.Heavy || weight == HitWeight.Finisher;
+        }
+
+        /// Soft lock-on: swing toward the nearest enemy inside a cone around the aim, so near
+        /// misses still connect. Tuned in PlayerConfig (0 degrees = off).
+        private Vector3 AssistedDirection(Vector3 aim, float reach)
+        {
+            var config = player.Config;
+            if (config == null || config.meleeAimAssistAngle <= 0f) return aim;
+
+            var best = aim;
+            var bestScore = float.MaxValue;
+            var maxDistance = reach + config.meleeAimAssistRange;
+            foreach (var enemy in CombatRegistry.Enemies)
+            {
+                if (enemy == null || !enemy.IsAlive) continue;
+                var offset = CombatUtility.Flat(enemy.transform.position - transform.position);
+                var distance = offset.magnitude;
+                if (distance < 0.01f || distance > maxDistance) continue;
+
+                var angle = Vector3.Angle(aim, offset);
+                if (angle > config.meleeAimAssistAngle) continue;
+
+                var score = angle + distance * 4f;
+                if (score >= bestScore) continue;
+                bestScore = score;
+                best = offset / distance;
+            }
+            return best;
+        }
+
         private void BeginActive()
         {
             phase = Phase.Active;
             phaseTimer = step.active;
             attackDirection = player.AimDirection;
-            player.Face(attackDirection);
 
-            if (player.Billboard != null) player.Billboard.Punch(new Vector2(1.2f, 0.85f));
+            if (player.Billboard != null)
+            {
+                player.Billboard.SetTint(Color.white);
+                var heavy = IsHeavy(step);
+                player.Billboard.Punch(heavy ? new Vector2(1.3f, 0.78f) : new Vector2(1.2f, 0.85f));
+                // Heavy swings have weight even when they whiff.
+                if (heavy) CameraShake.Add(0.06f);
+            }
 
             if (step.kind == AttackKind.MeleeArc)
             {
+                attackDirection = AssistedDirection(attackDirection, step.range);
+                player.Face(attackDirection);
+
                 if (step.lungeDistance > 0f)
                 {
                     var duration = Mathf.Max(0.05f, step.active);
@@ -341,7 +393,7 @@ namespace Vela.Player
             if (crit) amount = Mathf.RoundToInt(amount * weapon.critMultiplier);
 
             return CombatUtility.MakeHit(gameObject, Team.Player, victim, amount, crit,
-                s.knockback, s.stagger, s.hitStop, s.cameraShake);
+                s.knockback, s.stagger, s.hitStop, s.cameraShake, s.hitWeight);
         }
 
         private void EndAttack(bool resetCombo)
@@ -350,6 +402,7 @@ namespace Vela.Player
             phase = Phase.Idle;
             phaseTimer = 0f;
             ReleaseChargeRing();
+            if (player != null && player.Billboard != null) player.Billboard.SetTint(Color.white);
             if (resetCombo) comboIndex = 0;
         }
     }

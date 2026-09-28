@@ -34,6 +34,12 @@ namespace Vela.Config
         public float afterImageLifetime = 0.25f;
         public Color afterImageColor = new Color(0.4f, 0.9f, 1f, 0.6f);
 
+        [Header("Melee aim assist")]
+        [Tooltip("Melee swings snap toward the nearest enemy within this many degrees of the cursor. 0 = off.")]
+        [Range(0f, 90f)] public float meleeAimAssistAngle = 40f;
+        [Tooltip("Enemies up to this far beyond the weapon's range still pull the swing toward them.")]
+        public float meleeAimAssistRange = 1.2f;
+
         [Header("Weapons (keys 1 / 2 / 3, Tab cycles)")]
         public WeaponConfig[] weapons = new WeaponConfig[0];
         public int startingWeapon;
