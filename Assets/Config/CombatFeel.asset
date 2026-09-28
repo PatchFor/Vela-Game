@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 510886e8ff7344b8f8a287b71e9ef6c1, type: 3}
+  m_Name: CombatFeel
+  m_EditorClassIdentifier: 
+  hitStopScale: 1
+  cameraShakeScale: 1
+  knockbackScale: 1
+  enemyDamageScale: 1
+  playerHurtHitStop: 0.08
+  playerHurtShake: 0.35
+  playerHurtScreenFlash: 0.25
+  hitFlashDuration: 0.09
+  hitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  hitSquash: 0.25
+  showDamageNumbers: 1
+  fontSize: 22
+  critFontSize: 32
+  riseSpeed: 1.6
+  lifetime: 0.8
+  horizontalScatter: 0.4
+  dealtColor: {r: 1, g: 1, b: 1, a: 1}
+  critColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  takenColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  healColor: {r: 0.4, g: 1, b: 0.5, a: 1}
+  critSuffix: '!'
+  showSlashes: 1
+  showTelegraphs: 1
+  hitSparkCount: 10
+  hitSparkColor: {r: 1, g: 0.95, b: 0.75, a: 1}
+  deathBurstCount: 28

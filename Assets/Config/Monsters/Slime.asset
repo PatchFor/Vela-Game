@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344d35084abc146a7b5f51e767a1909b, type: 3}
+  m_Name: Slime
+  m_EditorClassIdentifier: 
+  displayName: Green Slime
+  visual:
+    sprite: {fileID: 21300000, guid: e2eaf3cb33f6848afba110ef4c74d698, type: 3}
+    idleFrames: []
+    moveFrames: []
+    attackFrames: []
+    hurtFrames: []
+    framesPerSecond: 8
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    worldHeight: 1
+    artFacesRight: 1
+    shadowSize: 1.1
+    hoverHeight: 0
+    moveBob: 0.14
+    idleBreath: 0.06
+    moveLean: 6
+  maxHealth: 45
+  colliderRadius: 0.45
+  colliderHeight: 1
+  poise: 0
+  staggerDuration: 0.3
+  knockbackResistance: 0
+  groupAlertRadius: 7
+  deathBurstColor: {r: 0.5, g: 0.9, b: 0.3, a: 1}
+  behaviour:
+    movement: 0
+    moveSpeed: 3.2
+    turnSpeed: 540
+    detectionRange: 10
+    leashRange: 24
+    preferredDistance: 1.8
+    erraticInterval: 0.5
+    attackDecisionDelay: 0.4
+    attacks:
+    - name: Hop Bite
+      kind: 1
+      weight: 1
+      minRange: 0
+      maxRange: 3.2
+      cooldown: 1.6
+      windup: 0.55
+      active: 0.28
+      recovery: 0.7
+      trackDuringWindup: 1
+      trackTurnSpeed: 300
+      damage: 10
+      knockback: 6
+      radius: 0.9
+      arcDegrees: 100
+      dashSpeed: 10
+      projectileCount: 1
+      spreadDegrees: 0
+      volleys: 1
+      volleyInterval: 0.15
+      projectileSpeed: 10
+      projectileRange: 14
+      projectileSize: 0.3
+      aoeCount: 1
+      aoeScatter: 0
+      summon: {fileID: 0}
+      summonCount: 2
+      showTelegraph: 1
+      color: {r: 0.5, g: 1, b: 0.3, a: 0.55}
+  immortal: 0

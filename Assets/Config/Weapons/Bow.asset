@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64796dc7b05eb43aba568d363f69136f, type: 3}
+  m_Name: Bow
+  m_EditorClassIdentifier: 
+  displayName: Bow
+  uiColor: {r: 0.75, g: 1, b: 0.5, a: 1}
+  icon: {fileID: 0}
+  critChance: 0.25
+  critMultiplier: 2
+  combo:
+  - name: Shot
+    kind: 1
+    damage: 9
+    damageVariance: 0.1
+    windup: 0.08
+    active: 0.02
+    recovery: 0.28
+    range: 2.2
+    arcDegrees: 120
+    lungeDistance: 0.6
+    projectileCount: 1
+    spreadDegrees: 0
+    projectileSpeed: 26
+    projectileRange: 18
+    pierce: 0
+    projectileSize: 0.18
+    projectileColor: {r: 1, g: 0.95, b: 0.7, a: 1}
+    knockback: 2
+    stagger: 5
+    hitStop: 0.03
+    cameraShake: 0.04
+    moveSpeedMultiplier: 0.6
+    superArmor: 0
+    slashColor: {r: 1, g: 1, b: 1, a: 1}
+    slashWidth: 0.6
+    slashDuration: 0.14
+    reverseSwing: 0
+  comboResetTime: 0.3
+  inputBufferTime: 0.25
+  repeatWhileHeld: 1
+  canDashCancel: 1
+  hasChargedAttack: 1
+  chargeTime: 0.7
+  chargeMoveSpeedMultiplier: 0.4
+  chargedAttack:
+    name: Piercing Volley
+    kind: 1
+    damage: 22
+    damageVariance: 0.1
+    windup: 0.02
+    active: 0.02
+    recovery: 0.4
+    range: 2.2
+    arcDegrees: 120
+    lungeDistance: 0.6
+    projectileCount: 3
+    spreadDegrees: 16
+    projectileSpeed: 34
+    projectileRange: 22
+    pierce: 3
+    projectileSize: 0.26
+    projectileColor: {r: 0.7, g: 1, b: 0.6, a: 1}
+    knockback: 7
+    stagger: 25
+    hitStop: 0.07
+    cameraShake: 0.2
+    moveSpeedMultiplier: 0.3
+    superArmor: 0
+    slashColor: {r: 1, g: 1, b: 1, a: 1}
+    slashWidth: 0.6
+    slashDuration: 0.14
+    reverseSwing: 0
