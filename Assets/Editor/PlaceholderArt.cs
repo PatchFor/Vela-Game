@@ -8,7 +8,7 @@ namespace Vela.EditorTools
     /// Generates the placeholder pixel art (PNG files under Assets/Art/Placeholder) the first
     /// time the scene is built. They are ordinary sprite assets: replace a PNG in place, or
     /// point a config's `visual.sprite` at your own sprite.
-    public static class PlaceholderArt
+    public static partial class PlaceholderArt
     {
         public const string Folder = "Assets/Art/Placeholder";
 
@@ -214,6 +214,16 @@ namespace Vela.EditorTools
 
         // ------------------------------------------------------------------ ground & walls
 
+        public static Texture2D Water() => Tile("Water", Hex("3a7ca5"), 0.05f, (c, rng) =>
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                int x = rng.Next(28), y = rng.Next(32);
+                c.Rect(x, y, x + 3, y, Hex("7fb8d8"));
+            }
+            for (var i = 0; i < 6; i++) c.Set(rng.Next(32), rng.Next(32), Hex("cfe9f5"));
+        });
+
         public static Texture2D Grass() => Tile("Grass", Hex("5a8f3c"), 0.07f, (c, rng) =>
         {
             for (var i = 0; i < 26; i++)
@@ -402,6 +412,26 @@ namespace Vela.EditorTools
                 for (var y = y0; y <= y1; y++)
                 for (var x = x0; x <= x1; x++)
                     Set(x, y, color);
+            }
+
+            public void Clear(int x, int y) => Set(x, y, new Color32(0, 0, 0, 0));
+
+            public void ClearEllipse(int cx, int cy, int rx, int ry) => Ellipse(cx, cy, rx, ry, new Color32(0, 0, 0, 0));
+
+            /// Thick line (Bresenham, stamped `thickness` px wide).
+            public void Line(int x0, int y0, int x1, int y1, Color32 color, int thickness = 1)
+            {
+                int dx = Mathf.Abs(x1 - x0), dy = -Mathf.Abs(y1 - y0);
+                int sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+                var err = dx + dy;
+                while (true)
+                {
+                    Rect(x0, y0, x0 + thickness - 1, y0 + thickness - 1, color);
+                    if (x0 == x1 && y0 == y1) break;
+                    var e2 = 2 * err;
+                    if (e2 >= dy) { err += dy; x0 += sx; }
+                    if (e2 <= dx) { err += dx; y0 += sy; }
+                }
             }
 
             public void Ellipse(int cx, int cy, int rx, int ry, Color32 color)

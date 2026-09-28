@@ -112,6 +112,7 @@ namespace Vela.Combat
                 }
 
                 if (hit.collider.GetComponentInParent<Projectile>() != null) continue;
+                if (hit.collider.GetComponent<Vela.World.ProjectilePassThrough>() != null) continue;
 
                 // Scenery.
                 FxManager.HitSpark(hit.point, -spec.Direction, spec.Color, 5);

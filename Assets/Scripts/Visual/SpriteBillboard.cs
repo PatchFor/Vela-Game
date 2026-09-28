@@ -4,6 +4,14 @@ using Vela.Gameplay;
 
 namespace Vela.Visual
 {
+    /// Four-way facing relative to the camera. Left is Side mirrored.
+    public enum Direction4
+    {
+        Down,
+        Up,
+        Side
+    }
+
     public enum VisualState
     {
         Idle,
@@ -49,9 +57,22 @@ namespace Vela.Visual
         private Vector2 squash = Vector2.one;
         private Vector2 squashVelocity;
 
+        private float airHeight;
+
         public SpriteRenderer Renderer => spriteRenderer;
         public CharacterVisual Visual => visual;
         public bool FacingLeft => facingLeft;
+        public Transform SpriteRoot => spriteRoot;
+
+        /// Facing relative to the camera (Down = toward the camera, Up = away).
+        public Direction4 Direction { get; private set; } = Direction4.Down;
+
+        /// Set by PaperDoll: returns the body sprite for a direction. When set, the sprite only
+        /// mirrors in Side view, and Up/Down use their own art.
+        public System.Func<Direction4, Sprite> DirectionalSprite { get; set; }
+
+        /// Lifts the sprite (not the shadow) off the ground, e.g. during a jump.
+        public void SetAirHeight(float height) => airHeight = Mathf.Max(0f, height);
 
         private void Awake()
         {
@@ -80,7 +101,15 @@ namespace Vela.Visual
             if (cam == null) return;
 
             var side = Vector3.Dot(worldDirection, cam.transform.right);
+            var camForward = cam.transform.forward;
+            camForward.y = 0f;
+            var forward = Vector3.Dot(worldDirection, camForward.normalized);
+
             if (Mathf.Abs(side) > 0.15f) facingLeft = side < 0f;
+
+            // Slight bias toward Side so diagonals read as profile, like most 4-way pixel games.
+            if (Mathf.Abs(side) >= Mathf.Abs(forward) * 0.85f) Direction = Direction4.Side;
+            else Direction = forward > 0f ? Direction4.Up : Direction4.Down;
         }
 
         public void Flash(Color color, float duration)
@@ -204,6 +233,12 @@ namespace Vela.Visual
                 _ => visual.idleFrames
             };
 
+            if (DirectionalSprite != null)
+            {
+                var directional = DirectionalSprite(Direction);
+                if (directional != null) return directional;
+            }
+
             if (frames == null || frames.Length == 0) frames = visual.idleFrames;
             if (frames == null || frames.Length == 0) return visual.sprite;
 
@@ -262,9 +297,10 @@ namespace Vela.Visual
             var sy = baseScale * squash.y * breathe;
             spriteRoot.localScale = new Vector3(sx, sy, baseScale);
             spriteRoot.position = transform.position + spriteRoot.up * (feetOffset * squash.y * breathe)
-                                  + Vector3.up * (bob + Hover()) + TrembleOffset(cam);
+                                  + Vector3.up * (bob + Hover() + airHeight) + TrembleOffset(cam);
 
-            spriteRenderer.flipX = visual.artFacesRight ? facingLeft : !facingLeft;
+            var mirror = DirectionalSprite == null || Direction == Direction4.Side;
+            spriteRenderer.flipX = mirror && (visual.artFacesRight ? facingLeft : !facingLeft);
 
             var flashing = Time.time < flashUntil;
             var wanted = flashing ? VelaSettings.FlashMaterial : VelaSettings.UnlitMaterial;

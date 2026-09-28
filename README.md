@@ -51,20 +51,32 @@ menu items help:
 
 ## 2. Controls
 
+Keyboard plays; the mouse points (aim, pick targets, pick up items) and runs whatever action
+you bind to its buttons.
+
 | Input | Action |
 | --- | --- |
-| `WASD` | Move |
-| Mouse | Aim (the camera leans slightly toward the cursor) |
-| Left click (or `J`) | Attack. Keep clicking to continue the combo; hold for the bow |
-| Hold right click (or `K`) | Charge the heavy attack. Release when the ring is full |
-| `Space` / `Shift` | Dash. You're invulnerable during it, and it leaves afterimages |
-| `1` `2` `3` / `Tab` | Sword / Bow / Greatsword |
-| Mouse wheel, `+` / `-` | Zoom in and out. The camera angle stays locked |
-| `T` | Respawn all monsters and heal to full |
-| `B` | Teleport to the boss arena entrance |
-| `G` | God mode (you still get hit, but HP never drops below 1) |
-| `R` | Restart the scene |
+| `WASD` | Move (4-way facing art) |
+| `Space` / `Shift` | Dash with i-frames. **Near a marked river edge: jump across** |
+| `J` | Basic attack (weapon combo) |
+| Hold `K`, release when full | Charged attack |
+| `1` `2` `3` `4` | Skills: Spin Slash, Piercing Shot, Ground Slam, Fan of Knives |
+| Left mouse | Bound action (default: basic attack toward the pointer) |
+| Right mouse | Bound action (default: charged attack) |
+| `Q` / middle mouse | Lock on: the hovered monster, else the best one in front. Press again to release |
+| `E` | Next target |
+| Click a monster | Lock it (the click also attacks) |
+| Click an item / `F` | Pick up. If it's out of reach, you walk there first. Gold: walk over it |
+| `I` | Inventory: drag to move/equip, drag outside to drop, right-click to use/equip. Mouse bindings are set here |
+| `Tab` | Next weapon |
+| Mouse wheel, `+` / `-` | Zoom |
+| `O` | Random outfit (test the paper doll) |
+| `F5` | Drop test loot around you (test full inventory, rarity looks) |
+| `T` / `B` / `G` / `R` | Respawn monsters / go to the boss / god mode / restart |
 | `H` / `F1` | Show or hide the help text |
+
+Plans, specs, and the agent team: see `docs/plan/week-1.md`, `docs/specs/`, `docs/art-pipeline.md`,
+`CLAUDE.md` and `.claude/agents/`.
 
 ## 3. The level
 

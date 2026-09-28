@@ -5,10 +5,43 @@ using UnityEngine.InputSystem;
 
 namespace Vela.Core
 {
-    // Compiles against whichever input backend the project is set to, so the
-    // prototype keeps working if the Input System package is added later.
+    /// All input in one place. Compiles against whichever input backend the project uses.
+    ///
+    /// Keyboard plays: WASD move, Space/Shift dash, J attack, K charge, 1–4 skills, Q lock-on,
+    /// E next target, F pick up, I inventory, Tab weapon.
+    /// Mouse points: click items / monsters; left/right buttons run whatever action is bound.
     public static class VelaInput
     {
+        public enum MouseButton
+        {
+            Left = 0,
+            Right = 1,
+            Middle = 2
+        }
+
+        private static int consumedLeftFrame = -1;
+        private static int consumedRightFrame = -1;
+
+        /// Set every frame by UI windows while the pointer is over them: mouse clicks then
+        /// belong to the UI, not the game.
+        public static bool PointerOverUI { get; set; }
+
+        /// A window (inventory) is open and wants the mouse.
+        public static bool UIOpen { get; set; }
+
+        /// Call when a click was used for something (picking an item) so combat ignores it.
+        public static void ConsumeClick(MouseButton button)
+        {
+            if (button == MouseButton.Left) consumedLeftFrame = Time.frameCount;
+            else if (button == MouseButton.Right) consumedRightFrame = Time.frameCount;
+        }
+
+        private static bool Consumed(MouseButton button) =>
+            (button == MouseButton.Left && consumedLeftFrame == Time.frameCount) ||
+            (button == MouseButton.Right && consumedRightFrame == Time.frameCount);
+
+        private static bool GameGetsMouse => !PointerOverUI;
+
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
         private static bool Down(Key key)
         {
@@ -21,24 +54,30 @@ namespace Vela.Core
             var keyboard = Keyboard.current;
             return keyboard != null && keyboard[key].isPressed;
         }
+
+        private static UnityEngine.InputSystem.Controls.ButtonControl Button(MouseButton b)
+        {
+            var mouse = Mouse.current;
+            if (mouse == null) return null;
+            return b == MouseButton.Left ? mouse.leftButton : b == MouseButton.Right ? mouse.rightButton : mouse.middleButton;
+        }
+
+        private static bool RawMouseDown(MouseButton b) => Button(b)?.wasPressedThisFrame ?? false;
+        private static bool RawMouseHeld(MouseButton b) => Button(b)?.isPressed ?? false;
+#else
+        private static bool Down(KeyCode key) => Input.GetKeyDown(key);
+        private static bool Held(KeyCode key) => Input.GetKey(key);
+        private static bool RawMouseDown(MouseButton b) => Input.GetMouseButtonDown((int)b);
+        private static bool RawMouseHeld(MouseButton b) => Input.GetMouseButton((int)b);
 #endif
 
-        public static Vector2 Move
-        {
-            get
-            {
-                var move = Vector2.zero;
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                if (Held(Key.W) || Held(Key.UpArrow)) move.y += 1f;
-                if (Held(Key.S) || Held(Key.DownArrow)) move.y -= 1f;
-                if (Held(Key.D) || Held(Key.RightArrow)) move.x += 1f;
-                if (Held(Key.A) || Held(Key.LeftArrow)) move.x -= 1f;
-#else
-                move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-#endif
-                return Vector2.ClampMagnitude(move, 1f);
-            }
-        }
+        // ------------------------------------------------------------------ mouse
+
+        public static bool MouseDown(MouseButton b) => GameGetsMouse && !Consumed(b) && RawMouseDown(b);
+        public static bool MouseHeld(MouseButton b) => GameGetsMouse && RawMouseHeld(b);
+
+        /// Raw state, ignoring UI (for UI code itself).
+        public static bool MouseDownRaw(MouseButton b) => RawMouseDown(b);
 
         public static Vector2 MousePosition
         {
@@ -53,11 +92,12 @@ namespace Vela.Core
             }
         }
 
-        /// Scroll wheel notches this frame: positive = away from the player (zoom in).
+        /// Scroll wheel notches this frame: positive = zoom in.
         public static float Zoom
         {
             get
             {
+                if (PointerOverUI) return 0f;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
                 var mouse = Mouse.current;
                 var scroll = mouse != null ? mouse.scroll.ReadValue().y / 120f : 0f;
@@ -73,146 +113,82 @@ namespace Vela.Core
             }
         }
 
-        public static bool AttackPressed
+        // ------------------------------------------------------------------ keyboard
+
+        public static Vector2 Move
         {
             get
             {
+                var move = Vector2.zero;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var mouse = Mouse.current;
-                return (mouse != null && mouse.leftButton.wasPressedThisFrame) || Down(Key.J);
+                if (Held(Key.W) || Held(Key.UpArrow)) move.y += 1f;
+                if (Held(Key.S) || Held(Key.DownArrow)) move.y -= 1f;
+                if (Held(Key.D) || Held(Key.RightArrow)) move.x += 1f;
+                if (Held(Key.A) || Held(Key.LeftArrow)) move.x -= 1f;
 #else
-                return Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.J);
+                if (Held(KeyCode.W) || Held(KeyCode.UpArrow)) move.y += 1f;
+                if (Held(KeyCode.S) || Held(KeyCode.DownArrow)) move.y -= 1f;
+                if (Held(KeyCode.D) || Held(KeyCode.RightArrow)) move.x += 1f;
+                if (Held(KeyCode.A) || Held(KeyCode.LeftArrow)) move.x -= 1f;
 #endif
+                return Vector2.ClampMagnitude(move, 1f);
             }
         }
 
-        public static bool AttackHeld
-        {
-            get
-            {
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var mouse = Mouse.current;
-                return (mouse != null && mouse.leftButton.isPressed) || Held(Key.J);
-#else
-                return Input.GetMouseButton(0) || Input.GetKey(KeyCode.J);
-#endif
-            }
-        }
+        public static bool AttackKeyPressed => Down(Key.J);
+        public static bool AttackKeyHeld => Held(Key.J);
+        public static bool ChargeKeyHeld => Held(Key.K);
+        public static bool DashPressed => Down(Key.Space) || Down(Key.LeftShift);
+        public static bool LockOnPressed => Down(Key.Q) || RawMouseDown(MouseButton.Middle);
+        public static bool NextTargetPressed => Down(Key.E);
+        public static bool PickUpPressed => Down(Key.F);
+        public static bool InventoryPressed => Down(Key.I);
+        public static bool CycleWeaponPressed => Down(Key.Tab);
+        public static bool RestartPressed => Down(Key.R);
+        public static bool RespawnEnemiesPressed => Down(Key.T);
+        public static bool GodModePressed => Down(Key.G);
+        public static bool TeleportToBossPressed => Down(Key.B);
+        public static bool HelpPressed => Down(Key.F1) || Down(Key.H);
+        public static bool DebugLootPressed => Down(Key.F5);
+        public static bool DebugOutfitPressed => Down(Key.O);
+        public static bool CancelPressed => Down(Key.Escape);
 
-        /// Charge / heavy attack button (right mouse or K).
-        public static bool SpecialHeld
+        public static bool SkillPressed(int index) => index switch
         {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                var mouse = Mouse.current;
-                return (mouse != null && mouse.rightButton.isPressed) || Held(Key.K);
+            0 => Down(Key.Digit1),
+            1 => Down(Key.Digit2),
+            2 => Down(Key.Digit3),
+            3 => Down(Key.Digit4),
+            _ => false
+        };
 #else
-                return Input.GetMouseButton(1) || Input.GetKey(KeyCode.K);
-#endif
-            }
-        }
+        public static bool AttackKeyPressed => Down(KeyCode.J);
+        public static bool AttackKeyHeld => Held(KeyCode.J);
+        public static bool ChargeKeyHeld => Held(KeyCode.K);
+        public static bool DashPressed => Down(KeyCode.Space) || Down(KeyCode.LeftShift);
+        public static bool LockOnPressed => Down(KeyCode.Q) || RawMouseDown(MouseButton.Middle);
+        public static bool NextTargetPressed => Down(KeyCode.E);
+        public static bool PickUpPressed => Down(KeyCode.F);
+        public static bool InventoryPressed => Down(KeyCode.I);
+        public static bool CycleWeaponPressed => Down(KeyCode.Tab);
+        public static bool RestartPressed => Down(KeyCode.R);
+        public static bool RespawnEnemiesPressed => Down(KeyCode.T);
+        public static bool GodModePressed => Down(KeyCode.G);
+        public static bool TeleportToBossPressed => Down(KeyCode.B);
+        public static bool HelpPressed => Down(KeyCode.F1) || Down(KeyCode.H);
+        public static bool DebugLootPressed => Down(KeyCode.F5);
+        public static bool DebugOutfitPressed => Down(KeyCode.O);
+        public static bool CancelPressed => Down(KeyCode.Escape);
 
-        public static bool DashPressed
+        public static bool SkillPressed(int index) => index switch
         {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.Space) || Down(Key.LeftShift);
-#else
-                return Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.LeftShift);
+            0 => Down(KeyCode.Alpha1),
+            1 => Down(KeyCode.Alpha2),
+            2 => Down(KeyCode.Alpha3),
+            3 => Down(KeyCode.Alpha4),
+            _ => false
+        };
 #endif
-            }
-        }
-
-        /// 0-based weapon slot chosen with the number keys this frame, or -1.
-        public static int WeaponSlotPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                if (Down(Key.Digit1)) return 0;
-                if (Down(Key.Digit2)) return 1;
-                if (Down(Key.Digit3)) return 2;
-#else
-                if (Input.GetKeyDown(KeyCode.Alpha1)) return 0;
-                if (Input.GetKeyDown(KeyCode.Alpha2)) return 1;
-                if (Input.GetKeyDown(KeyCode.Alpha3)) return 2;
-#endif
-                return -1;
-            }
-        }
-
-        public static bool CycleWeaponPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.Tab);
-#else
-                return Input.GetKeyDown(KeyCode.Tab);
-#endif
-            }
-        }
-
-        public static bool RestartPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.R);
-#else
-                return Input.GetKeyDown(KeyCode.R);
-#endif
-            }
-        }
-
-        public static bool RespawnEnemiesPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.T);
-#else
-                return Input.GetKeyDown(KeyCode.T);
-#endif
-            }
-        }
-
-        public static bool GodModePressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.G);
-#else
-                return Input.GetKeyDown(KeyCode.G);
-#endif
-            }
-        }
-
-        public static bool TeleportToBossPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.B);
-#else
-                return Input.GetKeyDown(KeyCode.B);
-#endif
-            }
-        }
-
-        public static bool HelpPressed
-        {
-            get
-            {
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-                return Down(Key.F1) || Down(Key.H);
-#else
-                return Input.GetKeyDown(KeyCode.F1) || Input.GetKeyDown(KeyCode.H);
-#endif
-            }
-        }
     }
 }

@@ -8,7 +8,7 @@ namespace Vela.EditorTools
     /// Creates the config assets under Assets/Config with tuned starting values. Existing
     /// assets are left alone (so your tweaks survive a scene rebuild) unless you use
     /// "Vela ▸ Reset Configs To Defaults".
-    public static class ConfigDefaults
+    public static partial class ConfigDefaults
     {
         public const string Root = "Assets/Config";
 
@@ -30,6 +30,11 @@ namespace Vela.EditorTools
             public MonsterConfig Cultist;
             public MonsterConfig Dummy;
             public BossConfig Boss;
+
+            // Gameplay content (see ConfigDefaults.Gameplay.cs)
+            public Items.LootConfig Loot;
+            public Items.LootTable DebugLoot;
+            public Items.ItemDefinition[] Wardrobe;
         }
 
         public static Set CreateAll(Materials materials)
@@ -83,6 +88,8 @@ namespace Vela.EditorTools
             {
                 EditorUtility.SetDirty(asset);
             }
+
+            CreateGameplayContent(set);
 
             AssetDatabase.SaveAssets();
             return set;

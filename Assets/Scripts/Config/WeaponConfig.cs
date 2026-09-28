@@ -82,6 +82,8 @@ namespace Vela.Config
         public Color uiColor = Color.white;
         [Tooltip("Optional HUD icon.")]
         public Sprite icon;
+        [Tooltip("What the character holds (paper-doll weapon layer).")]
+        public Vela.Visual.EquipmentVisual visual;
 
         [Header("Crit")]
         [Range(0f, 1f)] public float critChance = 0.15f;

@@ -153,6 +153,8 @@ namespace Vela.Config
 
         [Header("Death")]
         public Color deathBurstColor = new Color(1f, 0.5f, 0.4f);
+        [Tooltip("What it drops (gold + items).")]
+        public Vela.Items.LootTable loot;
 
         public abstract EnemyBehaviour InitialBehaviour { get; }
     }

@@ -15,8 +15,15 @@ namespace Vela.Gameplay
         [SerializeField] private CombatFeelConfig feel;
         [SerializeField] private CameraConfig cameraConfig;
         [SerializeField] private FxLibrary fx;
+        [SerializeField] private Items.LootConfig lootConfig;
         [Tooltip("Where B teleports the player (the boss arena entrance).")]
         [SerializeField] private Transform bossArenaEntrance;
+
+        [Header("Debug")]
+        [Tooltip("F5 drops this table around the player (test inventory full, rarity looks...).")]
+        [SerializeField] private Items.LootTable debugLoot;
+        [Tooltip("O dresses the player in random pieces from this list.")]
+        [SerializeField] private Items.ItemDefinition[] wardrobe = new Items.ItemDefinition[0];
 
         private EnemySpawnPoint[] spawnPoints = new EnemySpawnPoint[0];
 
@@ -26,6 +33,13 @@ namespace Vela.Gameplay
         public bool ShowHelp { get; private set; } = true;
         public bool BossDefeated { get; private set; }
         public int Kills { get; private set; }
+
+        public void ConfigureLoot(Items.LootConfig newLoot, Items.LootTable newDebugLoot, Items.ItemDefinition[] newWardrobe)
+        {
+            lootConfig = newLoot;
+            debugLoot = newDebugLoot;
+            wardrobe = newWardrobe;
+        }
 
         public void Configure(CombatFeelConfig newFeel, CameraConfig newCamera, FxLibrary newFx, Transform bossEntrance)
         {
@@ -46,6 +60,8 @@ namespace Vela.Gameplay
             VelaSettings.Feel = feel;
             VelaSettings.Camera = cameraConfig;
             VelaSettings.Fx = fx;
+            VelaSettings.Loot = lootConfig;
+            HudMessages.Clear();
         }
 
         private void Start()
@@ -76,11 +92,23 @@ namespace Vela.Gameplay
             if (VelaInput.GodModePressed)
             {
                 GodMode = !GodMode;
-                var player = CombatRegistry.Player;
-                if (player != null) player.Health.Immortal = GodMode;
+                var hero = CombatRegistry.Player;
+                if (hero != null) hero.Health.Immortal = GodMode;
             }
 
             if (VelaInput.TeleportToBossPressed && bossArenaEntrance != null) TeleportPlayer(bossArenaEntrance.position);
+
+            var player = CombatRegistry.Player;
+            if (player != null && VelaInput.DebugLootPressed && debugLoot != null)
+            {
+                Items.LootSpawner.Drop(debugLoot, player.transform.position + player.Facing * 1.5f);
+            }
+
+            if (player != null && VelaInput.DebugOutfitPressed)
+            {
+                var inventory = player.GetComponent<Player.PlayerInventory>();
+                if (inventory != null) inventory.RandomOutfit(wardrobe);
+            }
         }
 
         public void SpawnAll()

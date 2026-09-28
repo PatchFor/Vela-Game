@@ -106,9 +106,13 @@ namespace Vela.CameraRig
             var player = CombatRegistry.Player;
             if (player != null && player.transform == target)
             {
-                var toAim = player.AimPoint - target.position;
+                // Lean toward the locked target if there is one, else a little toward the cursor.
+                var targeting = player.GetComponent<Player.PlayerTargeting>();
+                var lookAt = targeting != null && targeting.Target != null ? targeting.Target.transform.position : player.AimPoint;
+                var toAim = lookAt - target.position;
                 toAim.y = 0f;
-                wanted += Vector3.ClampMagnitude(toAim * 0.25f, settings.aimLookAhead);
+                wanted += Vector3.ClampMagnitude(toAim * (targeting != null && targeting.Target != null ? 0.4f : 0.25f),
+                    settings.aimLookAhead);
             }
 
             focus = Vector3.SmoothDamp(focus, wanted, ref focusVelocity, settings.followSmoothTime, Mathf.Infinity, dt);

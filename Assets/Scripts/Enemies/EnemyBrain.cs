@@ -718,6 +718,8 @@ namespace Vela.Enemies
             controller.enabled = false;
             CombatRegistry.Enemies.Remove(this);
 
+            Items.LootSpawner.Drop(config.loot, transform.position);
+
             var feel = VelaSettings.Feel;
             FxManager.DeathBurst(transform.position + Vector3.up * 0.8f, config.deathBurstColor, feel.deathBurstCount);
             HitStop.Request(feel.killHitStop * feel.hitStopScale);
