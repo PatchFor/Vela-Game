@@ -19,6 +19,7 @@ MonoBehaviour:
   critMultiplier: 2
   combo:
   - name: Cleave
+    hitWeight: 3
     kind: 0
     damage: 34
     damageVariance: 0.1
@@ -46,6 +47,7 @@ MonoBehaviour:
     slashDuration: 0.2
     reverseSwing: 0
   - name: Overhead Smash
+    hitWeight: 4
     kind: 0
     damage: 52
     damageVariance: 0.1
@@ -81,6 +83,7 @@ MonoBehaviour:
   chargeMoveSpeedMultiplier: 0.25
   chargedAttack:
     name: Whirlwind
+    hitWeight: 4
     kind: 0
     damage: 600
     damageVariance: 0.1

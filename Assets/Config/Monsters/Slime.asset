@@ -47,6 +47,7 @@ MonoBehaviour:
     attackDecisionDelay: 0.4
     attacks:
     - name: Hop Bite
+      hitWeight: 2
       kind: 1
       weight: 1
       minRange: 0

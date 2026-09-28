@@ -19,6 +19,7 @@ MonoBehaviour:
   critMultiplier: 2
   combo:
   - name: Shot
+    hitWeight: 1
     kind: 1
     damage: 9
     damageVariance: 0.1
@@ -54,6 +55,7 @@ MonoBehaviour:
   chargeMoveSpeedMultiplier: 0.4
   chargedAttack:
     name: Piercing Volley
+    hitWeight: 3
     kind: 1
     damage: 22
     damageVariance: 0.1

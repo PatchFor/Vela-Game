@@ -271,9 +271,8 @@ under the HP.
 `meleeAimAssistAngle` degrees of the cursor, so near misses still connect. Set it to 0 to
 turn it off.
 
-> Upgrading from an earlier build: existing config assets keep their old values, and new
-> fields start at their defaults (`hitWeight = Auto`). To get the tuned weights, run
-> **Vela → Reset Configs To Defaults**.
+> The committed config assets already have their `hitWeight` values set. If a local copy
+> shows `Auto` everywhere, pull again, or run **Vela → Reset Configs To Defaults**.
 
 ## 5. Replacing the placeholder art
 

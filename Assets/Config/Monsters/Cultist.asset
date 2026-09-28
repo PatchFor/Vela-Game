@@ -47,6 +47,7 @@ MonoBehaviour:
     attackDecisionDelay: 0.6
     attacks:
     - name: Fire Circles
+      hitWeight: 2
       kind: 4
       weight: 1
       minRange: 0
@@ -76,6 +77,7 @@ MonoBehaviour:
       showTelegraph: 1
       color: {r: 1, g: 0.45, b: 0.1, a: 0.5}
     - name: Ember Nova
+      hitWeight: 1
       kind: 6
       weight: 1.5
       minRange: 0

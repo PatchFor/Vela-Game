@@ -50,6 +50,7 @@ MonoBehaviour:
       attackDecisionDelay: 0.6
       attacks:
       - name: Great Sweep
+        hitWeight: 3
         kind: 0
         weight: 2
         minRange: 0
@@ -79,6 +80,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.3, b: 0.2, a: 0.5}
       - name: Shoulder Charge
+        hitWeight: 4
         kind: 2
         weight: 1.5
         minRange: 6
@@ -108,6 +110,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.2, b: 0.2, a: 0.45}
       - name: Blade Fan
+        hitWeight: 2
         kind: 3
         weight: 1
         minRange: 4
@@ -158,6 +161,7 @@ MonoBehaviour:
       attackDecisionDelay: 0.35
       attacks:
       - name: Great Sweep
+        hitWeight: 3
         kind: 0
         weight: 2
         minRange: 0
@@ -187,6 +191,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.3, b: 0.2, a: 0.5}
       - name: Rampage Charge
+        hitWeight: 4
         kind: 2
         weight: 1.5
         minRange: 5
@@ -216,6 +221,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.2, b: 0.2, a: 0.45}
       - name: Nova Burst
+        hitWeight: 1
         kind: 6
         weight: 1.2
         minRange: 0
@@ -245,6 +251,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.4, b: 0.3, a: 0.5}
       - name: Meteor Rain
+        hitWeight: 3
         kind: 4
         weight: 1
         minRange: 0
@@ -274,6 +281,7 @@ MonoBehaviour:
         showTelegraph: 1
         color: {r: 1, g: 0.3, b: 0.1, a: 0.5}
       - name: Call the Swarm
+        hitWeight: 1
         kind: 7
         weight: 0.5
         minRange: 0

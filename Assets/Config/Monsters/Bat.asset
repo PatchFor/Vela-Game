@@ -47,6 +47,7 @@ MonoBehaviour:
     attackDecisionDelay: 0.3
     attacks:
     - name: Dive
+      hitWeight: 1
       kind: 1
       weight: 1
       minRange: 0
