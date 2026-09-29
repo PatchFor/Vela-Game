@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Icon_Ember.png" id="1_cqbjg"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_5wsxr"]
+
+[resource]
+script = ExtResource("2_5wsxr")
+display_name = "Ember Shard"
+icon = ExtResource("1_cqbjg")
+rarity = 1
+category = 2
+max_stack = 50
+heal = 0

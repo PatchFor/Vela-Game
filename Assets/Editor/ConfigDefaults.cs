@@ -1,13 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 using Vela.Config;
+using Vela.Core;
 
 namespace Vela.EditorTools
 {
     /// Creates the config assets under Assets/Config with tuned starting values. Existing
     /// assets are left alone (so your tweaks survive a scene rebuild) unless you use
     /// "Vela ▸ Reset Configs To Defaults".
-    public static class ConfigDefaults
+    public static partial class ConfigDefaults
     {
         public const string Root = "Assets/Config";
 
@@ -29,6 +30,13 @@ namespace Vela.EditorTools
             public MonsterConfig Cultist;
             public MonsterConfig Dummy;
             public BossConfig Boss;
+
+            // Gameplay content (see ConfigDefaults.Gameplay.cs)
+            public Items.LootConfig Loot;
+            public Items.LootTable DebugLoot;
+            public Items.ItemDefinition[] Wardrobe;
+            public Visual.EquipmentVisual[] SwordSkins;
+            public Audio.SfxLibrary Sfx;
         }
 
         public static Set CreateAll(Materials materials)
@@ -82,6 +90,8 @@ namespace Vela.EditorTools
             {
                 EditorUtility.SetDirty(asset);
             }
+
+            CreateGameplayContent(set);
 
             AssetDatabase.SaveAssets();
             return set;
@@ -145,22 +155,22 @@ namespace Vela.EditorTools
             {
                 new AttackStep
                 {
-                    name = "Slash", damage = 12, windup = 0.05f, active = 0.08f, recovery = 0.2f,
+                    name = "Slash", hitWeight = HitWeight.Light, damage = 12, windup = 0.05f, active = 0.08f, recovery = 0.2f,
                     range = 2.3f, arcDegrees = 130f, lungeDistance = 0.5f,
-                    knockback = 3f, stagger = 8f, hitStop = 0.045f, cameraShake = 0.08f,
+                    knockback = 3f, stagger = 8f, hitStop = 0.04f, cameraShake = 0.08f,
                     moveSpeedMultiplier = 0.2f, slashColor = slash, slashWidth = 0.6f, slashDuration = 0.13f
                 },
                 new AttackStep
                 {
-                    name = "Backslash", damage = 12, windup = 0.05f, active = 0.08f, recovery = 0.2f,
+                    name = "Backslash", hitWeight = HitWeight.Light, damage = 12, windup = 0.05f, active = 0.08f, recovery = 0.2f,
                     range = 2.3f, arcDegrees = 130f, lungeDistance = 0.5f,
-                    knockback = 3f, stagger = 8f, hitStop = 0.045f, cameraShake = 0.08f,
+                    knockback = 3f, stagger = 8f, hitStop = 0.04f, cameraShake = 0.08f,
                     moveSpeedMultiplier = 0.2f, slashColor = slash, slashWidth = 0.6f, slashDuration = 0.13f,
                     reverseSwing = true
                 },
                 new AttackStep
                 {
-                    name = "Thrust Finisher", damage = 22, windup = 0.1f, active = 0.1f, recovery = 0.35f,
+                    name = "Thrust Finisher", hitWeight = HitWeight.Finisher, damage = 22, windup = 0.1f, active = 0.1f, recovery = 0.35f,
                     range = 2.8f, arcDegrees = 70f, lungeDistance = 1.4f,
                     knockback = 9f, stagger = 25f, hitStop = 0.09f, cameraShake = 0.2f,
                     moveSpeedMultiplier = 0.1f, slashColor = Color.white, slashWidth = 0.9f, slashDuration = 0.16f
@@ -172,7 +182,7 @@ namespace Vela.EditorTools
             w.chargeMoveSpeedMultiplier = 0.5f;
             w.chargedAttack = new AttackStep
             {
-                name = "Dash Strike", damage = 40, windup = 0f, active = 0.18f, recovery = 0.35f,
+                name = "Dash Strike", hitWeight = HitWeight.Finisher, damage = 40, windup = 0f, active = 0.18f, recovery = 0.35f,
                 range = 2.4f, arcDegrees = 100f, lungeDistance = 5.5f,
                 knockback = 12f, stagger = 40f, hitStop = 0.12f, cameraShake = 0.35f,
                 moveSpeedMultiplier = 0f, superArmor = true,
@@ -194,7 +204,7 @@ namespace Vela.EditorTools
             {
                 new AttackStep
                 {
-                    name = "Shot", kind = AttackKind.Projectile, damage = 9, windup = 0.08f, active = 0.02f,
+                    name = "Shot", hitWeight = HitWeight.Light, kind = AttackKind.Projectile, damage = 9, windup = 0.08f, active = 0.02f,
                     recovery = 0.28f, projectileCount = 1, projectileSpeed = 26f, projectileRange = 18f,
                     projectileSize = 0.18f, projectileColor = new Color(1f, 0.95f, 0.7f),
                     knockback = 2f, stagger = 5f, hitStop = 0.03f, cameraShake = 0.04f, moveSpeedMultiplier = 0.6f
@@ -206,7 +216,7 @@ namespace Vela.EditorTools
             w.chargeMoveSpeedMultiplier = 0.4f;
             w.chargedAttack = new AttackStep
             {
-                name = "Piercing Volley", kind = AttackKind.Projectile, damage = 22, windup = 0.02f, active = 0.02f,
+                name = "Piercing Volley", hitWeight = HitWeight.Heavy, kind = AttackKind.Projectile, damage = 22, windup = 0.02f, active = 0.02f,
                 recovery = 0.4f, projectileCount = 3, spreadDegrees = 16f, projectileSpeed = 34f,
                 projectileRange = 22f, pierce = 3, projectileSize = 0.26f, projectileColor = new Color(0.7f, 1f, 0.6f),
                 knockback = 7f, stagger = 25f, hitStop = 0.07f, cameraShake = 0.2f, moveSpeedMultiplier = 0.3f
@@ -227,7 +237,7 @@ namespace Vela.EditorTools
             {
                 new AttackStep
                 {
-                    name = "Cleave", damage = 34, windup = 0.28f, active = 0.12f, recovery = 0.45f,
+                    name = "Cleave", hitWeight = HitWeight.Heavy, damage = 34, windup = 0.28f, active = 0.12f, recovery = 0.45f,
                     range = 3.2f, arcDegrees = 170f, lungeDistance = 0.8f,
                     knockback = 10f, stagger = 35f, hitStop = 0.11f, cameraShake = 0.3f,
                     moveSpeedMultiplier = 0.05f, superArmor = true,
@@ -235,7 +245,7 @@ namespace Vela.EditorTools
                 },
                 new AttackStep
                 {
-                    name = "Overhead Smash", damage = 52, windup = 0.36f, active = 0.12f, recovery = 0.6f,
+                    name = "Overhead Smash", hitWeight = HitWeight.Finisher, damage = 52, windup = 0.36f, active = 0.12f, recovery = 0.6f,
                     range = 3.4f, arcDegrees = 110f, lungeDistance = 1f,
                     knockback = 14f, stagger = 60f, hitStop = 0.16f, cameraShake = 0.45f,
                     moveSpeedMultiplier = 0f, superArmor = true, reverseSwing = true,
@@ -248,7 +258,7 @@ namespace Vela.EditorTools
             w.chargeMoveSpeedMultiplier = 0.25f;
             w.chargedAttack = new AttackStep
             {
-                name = "Whirlwind", damage = 60, windup = 0.05f, active = 0.2f, recovery = 0.6f,
+                name = "Whirlwind", hitWeight = HitWeight.Finisher, damage = 60, windup = 0.05f, active = 0.2f, recovery = 0.6f,
                 range = 3.6f, arcDegrees = 360f, lungeDistance = 0f,
                 knockback = 16f, stagger = 80f, hitStop = 0.14f, cameraShake = 0.5f,
                 moveSpeedMultiplier = 0f, superArmor = true,
@@ -278,7 +288,7 @@ namespace Vela.EditorTools
                 {
                     new EnemyAttack
                     {
-                        name = "Hop Bite", kind = EnemyAttackKind.Lunge, maxRange = 3.2f, cooldown = 1.6f,
+                        name = "Hop Bite", hitWeight = HitWeight.Medium, kind = EnemyAttackKind.Lunge, maxRange = 3.2f, cooldown = 1.6f,
                         windup = 0.55f, active = 0.28f, recovery = 0.7f, damage = 10, knockback = 6f,
                         radius = 0.9f, dashSpeed = 10f, trackTurnSpeed = 300f, color = new Color(0.5f, 1f, 0.3f, 0.55f)
                     }
@@ -303,14 +313,14 @@ namespace Vela.EditorTools
                 {
                     new EnemyAttack
                     {
-                        name = "Aimed Shot", kind = EnemyAttackKind.Projectile, minRange = 3f, maxRange = 14f,
+                        name = "Aimed Shot", hitWeight = HitWeight.Light, kind = EnemyAttackKind.Projectile, minRange = 3f, maxRange = 14f,
                         cooldown = 1.8f, windup = 0.7f, active = 0.05f, recovery = 0.6f, damage = 12, knockback = 4f,
                         projectileSpeed = 13f, projectileRange = 16f, projectileSize = 0.25f, trackTurnSpeed = 200f,
                         color = new Color(1f, 0.4f, 0.3f, 0.5f)
                     },
                     new EnemyAttack
                     {
-                        name = "Scatter Volley", kind = EnemyAttackKind.Projectile, weight = 0.5f, minRange = 3f,
+                        name = "Scatter Volley", hitWeight = HitWeight.Light, kind = EnemyAttackKind.Projectile, weight = 0.5f, minRange = 3f,
                         maxRange = 10f, cooldown = 5f, windup = 1f, active = 0.05f, recovery = 0.7f, damage = 8,
                         knockback = 3f, projectileCount = 5, spreadDegrees = 50f, volleys = 2, volleyInterval = 0.35f,
                         projectileSpeed = 10f, projectileRange = 12f, projectileSize = 0.25f,
@@ -318,7 +328,7 @@ namespace Vela.EditorTools
                     },
                     new EnemyAttack
                     {
-                        name = "Kick", kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 2f, cooldown = 2f,
+                        name = "Kick", hitWeight = HitWeight.Medium, kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 2f, cooldown = 2f,
                         windup = 0.35f, active = 0.1f, recovery = 0.4f, damage = 6, knockback = 10f, radius = 1.8f,
                         arcDegrees = 100f, color = new Color(1f, 0.9f, 0.6f, 0.5f)
                     }
@@ -347,19 +357,19 @@ namespace Vela.EditorTools
                 {
                     new EnemyAttack
                     {
-                        name = "Club Swing", kind = EnemyAttackKind.MeleeArc, maxRange = 3.2f, cooldown = 2f,
+                        name = "Club Swing", hitWeight = HitWeight.Heavy, kind = EnemyAttackKind.MeleeArc, maxRange = 3.2f, cooldown = 2f,
                         windup = 0.8f, active = 0.12f, recovery = 0.8f, damage = 22, knockback = 14f, radius = 3.2f,
                         arcDegrees = 140f, trackTurnSpeed = 120f, color = new Color(1f, 0.3f, 0.2f, 0.5f)
                     },
                     new EnemyAttack
                     {
-                        name = "Ground Slam", kind = EnemyAttackKind.SelfAoE, weight = 0.6f, maxRange = 3.5f,
+                        name = "Ground Slam", hitWeight = HitWeight.Finisher, kind = EnemyAttackKind.SelfAoE, weight = 0.6f, maxRange = 3.5f,
                         cooldown = 5f, windup = 1.1f, active = 0.1f, recovery = 1.1f, damage = 28, knockback = 16f,
                         radius = 4f, color = new Color(1f, 0.5f, 0.2f, 0.5f)
                     },
                     new EnemyAttack
                     {
-                        name = "Charge", kind = EnemyAttackKind.Charge, minRange = 5f, maxRange = 12f, cooldown = 6f,
+                        name = "Charge", hitWeight = HitWeight.Heavy, kind = EnemyAttackKind.Charge, minRange = 5f, maxRange = 12f, cooldown = 6f,
                         windup = 0.9f, active = 0.9f, recovery = 0.9f, damage = 25, knockback = 16f, radius = 1.2f,
                         dashSpeed = 15f, trackTurnSpeed = 90f, color = new Color(1f, 0.2f, 0.2f, 0.45f)
                     }
@@ -389,7 +399,7 @@ namespace Vela.EditorTools
                 {
                     new EnemyAttack
                     {
-                        name = "Dive", kind = EnemyAttackKind.Lunge, maxRange = 4f, cooldown = 1.2f, windup = 0.35f,
+                        name = "Dive", hitWeight = HitWeight.Light, kind = EnemyAttackKind.Lunge, maxRange = 4f, cooldown = 1.2f, windup = 0.35f,
                         active = 0.22f, recovery = 0.45f, damage = 6, knockback = 3f, radius = 0.7f, dashSpeed = 14f,
                         trackTurnSpeed = 400f, color = new Color(0.8f, 0.4f, 1f, 0.5f)
                     }
@@ -413,13 +423,13 @@ namespace Vela.EditorTools
                 {
                     new EnemyAttack
                     {
-                        name = "Fire Circles", kind = EnemyAttackKind.GroundAoE, maxRange = 14f, cooldown = 3.5f,
+                        name = "Fire Circles", hitWeight = HitWeight.Medium, kind = EnemyAttackKind.GroundAoE, maxRange = 14f, cooldown = 3.5f,
                         windup = 1.2f, active = 0.1f, recovery = 0.6f, damage = 18, knockback = 6f, radius = 1.8f,
                         aoeCount = 3, aoeScatter = 3f, trackDuringWindup = false, color = new Color(1f, 0.45f, 0.1f, 0.5f)
                     },
                     new EnemyAttack
                     {
-                        name = "Ember Nova", kind = EnemyAttackKind.RadialBurst, weight = 1.5f, maxRange = 4f,
+                        name = "Ember Nova", hitWeight = HitWeight.Light, kind = EnemyAttackKind.RadialBurst, weight = 1.5f, maxRange = 4f,
                         cooldown = 5f, windup = 0.8f, active = 0.1f, recovery = 0.7f, damage = 10, knockback = 5f,
                         projectileCount = 10, volleys = 2, volleyInterval = 0.3f, projectileSpeed = 7f,
                         projectileRange = 9f, projectileSize = 0.28f, color = new Color(1f, 0.6f, 0.2f, 0.5f)
@@ -481,20 +491,20 @@ namespace Vela.EditorTools
                     {
                         new EnemyAttack
                         {
-                            name = "Great Sweep", kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 4f,
+                            name = "Great Sweep", hitWeight = HitWeight.Heavy, kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 4f,
                             cooldown = 2.2f, windup = 0.75f, active = 0.12f, recovery = 0.7f, damage = 20,
                             knockback = 14f, radius = 4f, arcDegrees = 160f, trackTurnSpeed = 150f, color = sweepColor
                         },
                         new EnemyAttack
                         {
-                            name = "Shoulder Charge", kind = EnemyAttackKind.Charge, weight = 1.5f, minRange = 6f,
+                            name = "Shoulder Charge", hitWeight = HitWeight.Finisher, kind = EnemyAttackKind.Charge, weight = 1.5f, minRange = 6f,
                             maxRange = 16f, cooldown = 5f, windup = 1f, active = 1f, recovery = 1f, damage = 24,
                             knockback = 18f, radius = 1.5f, dashSpeed = 17f, trackTurnSpeed = 90f,
                             color = new Color(1f, 0.2f, 0.2f, 0.45f)
                         },
                         new EnemyAttack
                         {
-                            name = "Blade Fan", kind = EnemyAttackKind.Projectile, minRange = 4f, maxRange = 14f,
+                            name = "Blade Fan", hitWeight = HitWeight.Medium, kind = EnemyAttackKind.Projectile, minRange = 4f, maxRange = 14f,
                             cooldown = 4f, windup = 0.8f, active = 0.05f, recovery = 0.7f, damage = 12, knockback = 5f,
                             projectileCount = 5, spreadDegrees = 60f, projectileSpeed = 11f, projectileRange = 16f,
                             projectileSize = 0.35f, trackTurnSpeed = 120f, color = new Color(0.5f, 0.9f, 1f, 0.5f)
@@ -524,34 +534,34 @@ namespace Vela.EditorTools
                     {
                         new EnemyAttack
                         {
-                            name = "Great Sweep", kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 4.2f,
+                            name = "Great Sweep", hitWeight = HitWeight.Heavy, kind = EnemyAttackKind.MeleeArc, weight = 2f, maxRange = 4.2f,
                             cooldown = 1.6f, windup = 0.55f, active = 0.12f, recovery = 0.55f, damage = 24,
                             knockback = 15f, radius = 4.2f, arcDegrees = 180f, trackTurnSpeed = 200f, color = sweepColor
                         },
                         new EnemyAttack
                         {
-                            name = "Rampage Charge", kind = EnemyAttackKind.Charge, weight = 1.5f, minRange = 5f,
+                            name = "Rampage Charge", hitWeight = HitWeight.Finisher, kind = EnemyAttackKind.Charge, weight = 1.5f, minRange = 5f,
                             maxRange = 18f, cooldown = 3.5f, windup = 0.75f, active = 1f, recovery = 0.8f, damage = 26,
                             knockback = 20f, radius = 1.6f, dashSpeed = 20f, trackTurnSpeed = 120f,
                             color = new Color(1f, 0.2f, 0.2f, 0.45f)
                         },
                         new EnemyAttack
                         {
-                            name = "Nova Burst", kind = EnemyAttackKind.RadialBurst, weight = 1.2f, maxRange = 8f,
+                            name = "Nova Burst", hitWeight = HitWeight.Light, kind = EnemyAttackKind.RadialBurst, weight = 1.2f, maxRange = 8f,
                             cooldown = 5f, windup = 0.9f, active = 0.1f, recovery = 0.8f, damage = 12, knockback = 6f,
                             projectileCount = 14, volleys = 3, volleyInterval = 0.35f, projectileSpeed = 8f,
                             projectileRange = 14f, projectileSize = 0.35f, color = new Color(1f, 0.4f, 0.3f, 0.5f)
                         },
                         new EnemyAttack
                         {
-                            name = "Meteor Rain", kind = EnemyAttackKind.GroundAoE, maxRange = 16f, cooldown = 6f,
+                            name = "Meteor Rain", hitWeight = HitWeight.Heavy, kind = EnemyAttackKind.GroundAoE, maxRange = 16f, cooldown = 6f,
                             windup = 1.1f, active = 0.1f, recovery = 0.7f, damage = 20, knockback = 8f, radius = 2.2f,
                             aoeCount = 5, aoeScatter = 4f, trackDuringWindup = false,
                             color = new Color(1f, 0.3f, 0.1f, 0.5f)
                         },
                         new EnemyAttack
                         {
-                            name = "Call the Swarm", kind = EnemyAttackKind.Summon, weight = 0.5f, maxRange = 16f,
+                            name = "Call the Swarm", hitWeight = HitWeight.Light, kind = EnemyAttackKind.Summon, weight = 0.5f, maxRange = 16f,
                             cooldown = 14f, windup = 1f, active = 0.1f, recovery = 0.6f, summon = set.Bat,
                             summonCount = 2, color = new Color(0.8f, 0.4f, 1f, 0.5f)
                         }

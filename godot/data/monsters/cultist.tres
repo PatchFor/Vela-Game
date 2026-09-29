@@ -1,0 +1,111 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_1ix5g"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_ehryr"]
+[ext_resource type="Resource" path="res://data/items/ember.tres" id="3_ha32n"]
+[ext_resource type="Resource" path="res://data/items/ember_gloves.tres" id="4_4p3ut"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="5_do1re"]
+[ext_resource type="Script" path="res://scripts/config/loot_table.gd" id="6_rvkpw"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="7_uo08x"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="8_6htjl"]
+[ext_resource type="Texture2D" path="res://art/Cultist.png" id="9_ujbih"]
+
+[sub_resource type="Resource" id="Resource_ug01a"]
+script = ExtResource("1_1ix5g")
+name = "Fire Circles"
+kind = 4
+weight = 1.0
+min_range = 0.0
+max_range = 14.0
+cooldown = 3.5
+windup = 1.2
+active = 0.1
+recovery = 0.6
+track = false
+track_speed = 240.0
+damage = 18
+knockback = 6.0
+hit_weight = 2
+radius = 1.8
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 3
+aoe_scatter = 3.0
+summon_count = 2
+color = Color(1, 0.45, 0.1, 0.5)
+
+[sub_resource type="Resource" id="Resource_brokr"]
+script = ExtResource("1_1ix5g")
+name = "Ember Nova"
+kind = 6
+weight = 1.5
+min_range = 0.0
+max_range = 4.0
+cooldown = 5.0
+windup = 0.8
+active = 0.1
+recovery = 0.7
+track = true
+track_speed = 240.0
+damage = 10
+knockback = 5.0
+hit_weight = 1
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 10
+spread = 0.0
+volleys = 2
+volley_interval = 0.3
+proj_speed = 7.0
+proj_range = 9.0
+proj_size = 0.28
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.6, 0.2, 0.5)
+
+[sub_resource type="Resource" id="Resource_n8alv"]
+script = ExtResource("6_rvkpw")
+gold_chance = 0.9
+gold_min = 5
+gold_max = 12
+guaranteed = Array[ExtResource("2_ehryr")]([])
+rolls = 1
+nothing_weight = 0.8
+items = Array[ExtResource("2_ehryr")]([ExtResource("3_ha32n"), ExtResource("4_4p3ut"), ExtResource("5_do1re")])
+weights = PackedFloat32Array(3, 1.2, 1)
+
+[resource]
+script = ExtResource("8_6htjl")
+display_name = "Ember Cultist"
+texture = ExtResource("9_ujbih")
+world_height = 1.9
+shadow_size = 1.0
+hover = 0.0
+max_hp = 55
+radius = 0.45
+height = 1.6
+poise = 20.0
+stagger_duration = 0.45
+knockback_resist = 0.0
+alert_radius = 7.0
+immortal = false
+death_color = Color(1, 0.5, 0.2, 1)
+movement = 1
+move_speed = 2.6
+detection = 14.0
+leash = 24.0
+preferred = 8.0
+erratic_interval = 0.5
+decision_delay = 0.6
+attacks = Array[ExtResource("1_1ix5g")]([SubResource("Resource_ug01a"), SubResource("Resource_brokr")])
+loot = SubResource("Resource_n8alv")
+phases = Array[ExtResource("7_uo08x")]([])

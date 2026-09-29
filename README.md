@@ -11,6 +11,10 @@ It includes:
 - Floating damage numbers, hit-stop, screen shake, slash arcs, hit sparks, and dash afterimages.
 - Telegraphed enemy attacks, and scenery that turns see-through when it hides someone.
 
+> **Godot comparison port:** the same prototype also runs in Godot 4.3 under [`godot/`](godot/README.md).
+> For engine advice (online, 2.5D, rendering/physics, and what to invest in) see
+> [`docs/engine-comparison.md`](docs/engine-comparison.md).
+
 Everything you'd want to tune lives in **config assets** (ScriptableObjects) that you edit in
 the Inspector. Every sprite is a placeholder PNG you can replace.
 
@@ -18,8 +22,9 @@ the Inspector. Every sprite is a placeholder PNG you can replace.
 
 ## 1. Open and build
 
-1. Install **Unity 6000.0 LTS** from Unity Hub. `ProjectVersion.txt` pins `6000.0.32f1`, but any
-   6000.0.x patch works.
+1. Install **Unity 6.3 LTS** from Unity Hub. `ProjectVersion.txt` pins `6000.3.24f1`, but any
+   6000.3.x patch works. Coming from 6000.0: open the project in 6.3 and let Unity upgrade it,
+   then accept the package updates it offers (Input System, Test Framework).
 2. In Unity Hub, choose **Add → Add project from disk** and pick this folder. The first import
    takes a few minutes.
 3. Wait for compilation to finish (no red errors in the Console). If Unity asks to enable
@@ -42,6 +47,11 @@ the Inspector. Every sprite is a placeholder PNG you can replace.
   stops every script and the menu from loading.
 - If a monster or the player can't be seen but the HUD shows, run
   **Vela → Regenerate Placeholder Art**.
+- **If you see an old version of the game** (no paper-doll player, no hover outline, F6 does
+  nothing): the scene on your disk is stale. The scene is generated and isn't stored in git,
+  so a leftover copy from an older clone stays until it's rebuilt. Run
+  **Vela → Build Combat Prototype Scene**, then press Play. If you once chose "Keep old scene",
+  Unity remembers that answer, so use the menu item.
 
 Rebuilding the scene **keeps your config assets and any sprites you swapped in**. Two other
 menu items help:
@@ -51,20 +61,48 @@ menu items help:
 
 ## 2. Controls
 
+Keyboard plays; the mouse points (aim, pick targets, pick up items) and runs whatever action
+you bind to its buttons.
+
 | Input | Action |
 | --- | --- |
-| `WASD` | Move |
-| Mouse | Aim (the camera leans slightly toward the cursor) |
-| Left click (or `J`) | Attack. Keep clicking to continue the combo; hold for the bow |
-| Hold right click (or `K`) | Charge the heavy attack. Release when the ring is full |
-| `Space` / `Shift` | Dash. You're invulnerable during it, and it leaves afterimages |
-| `1` `2` `3` / `Tab` | Sword / Bow / Greatsword |
-| Mouse wheel, `+` / `-` | Zoom in and out. The camera angle stays locked |
-| `T` | Respawn all monsters and heal to full |
-| `B` | Teleport to the boss arena entrance |
-| `G` | God mode (you still get hit, but HP never drops below 1) |
-| `R` | Restart the scene |
+| `WASD` | Move (4-way facing art) |
+| `Space` / `Shift` | Dash with i-frames. **Near a marked river edge: jump across** |
+| `J` | Basic attack (weapon combo) |
+| Hold `K`, release when full | Charged attack |
+| `1` `2` `3` `4` | Skills: Spin Slash, Piercing Shot, Ground Slam, Fan of Knives |
+| Left mouse | Bound action (default: basic attack toward the pointer) |
+| Right mouse | Bound action (default: charged attack) |
+| `Q` / middle mouse | Lock on: the hovered monster, else the best one in front. Press again to release |
+| `E` | Next target |
+| Hover a monster | Red outline: that's what a click or `Q` will target |
+| Click a monster | Lock it (the click also attacks) |
+| Click an item / `F` | Pick up. If it's out of reach, you walk there first. Gold: walk over it |
+| `I` | Inventory: drag to move/equip, drag outside to drop, right-click to use/equip. Mouse bindings are set here |
+| `Tab` | Next weapon |
+| Mouse wheel, `+` / `-` | Zoom |
+| `O` | Random outfit (test the paper doll) |
+| `F5` | Drop test loot around you (test full inventory, rarity looks) |
+| `F6` | Sword animation A/B: C full frames + smear → B key poses → A old single frame |
+| `F7` | Swap the sword look (long / short / broad). Same animation, works mid-swing |
+| `F3` | Animation debug: anchor dots, windup/active/recovery bar with frame counts, hit arc |
+| `T` / `B` / `G` / `R` | Respawn monsters / go to the boss / god mode / restart |
 | `H` / `F1` | Show or hide the help text |
+
+**Combat rewards:**
+- **Perfect dodge:** dash through an attack right as it lands. The world slows down, the
+  dash is ready again, and you get a short **counter** window (bonus damage, guaranteed crits).
+- **Hit-confirm:** once a hit connects, you can cancel into the next hit, a dash or a skill early.
+- **Punish:** hits on a staggered (BREAK!) enemy deal bonus damage.
+
+**Sound:** every event has a generated placeholder sound. Drop real clips into
+`Assets/Config/Audio/SfxLibrary.asset` to replace them.
+
+**Online readiness:** see `docs/architecture/online-readiness.md`. To preview how combat
+would feel in multiplayer, set `CombatFeel.asset → hitStopMode = LocalVisual`.
+
+Plans, specs, and the agent team: see `docs/plan/week-1.md`, `docs/specs/`, `docs/art-pipeline.md`,
+`CLAUDE.md` and `.claude/agents/`.
 
 ## 3. The level
 
@@ -219,15 +257,60 @@ white "chip" bar so big hits read clearly. Add a third phase by adding an entry 
 
 ### Global feel: `Assets/Config/CombatFeel.asset`
 
+This is the main tuning surface for combat feel.
+
+**Hit weight.** Every attack has a `hitWeight`: `Light`, `Medium`, `Heavy`, `Finisher`, or
+`Auto`, which guesses from stagger and damage. Each weight has an **impact profile** here:
+
+| Field | What it changes |
+| --- | --- |
+| `hitStopMultiplier`, `hitStopBonus` | Freeze-frame length on top of the attack's own `hitStop` |
+| `extraShake`, `zoomPunch` | Camera shake, and a quick zoom-in kick |
+| `squash`, `trembleAmount`, `trembleDuration` | Victim squash, and a sideways tremble that plays during the freeze |
+| `knockbackMultiplier` | How far the victim is pushed |
+| `sparkMultiplier`, `impactRing`, `dustCount` | Particles at the impact point |
+| `numberScale`, `numberColor` | Damage number size and color |
+
+Defaults: light hits are small, snappy and white. Heavy and finisher hits freeze longer,
+zoom the camera, throw rings and dust, and show big orange numbers.
+
+**Critical hits** add on top of the profile:
+- extra freeze, then a short **slow-motion** tail (`critSlowMoDuration`, `critSlowMoScale`)
+- zoom punch, a white/gold screen pop (`critScreenFlash`)
+- a star-shaped spark burst
+- a gold number that hangs, shakes, and carries a `CRITICAL` label
+
+**Poise break.** When enough stagger breaks an armored enemy (poise above 0), it shows
+`BREAK!` in blue with a ring, a freeze and a shake. This is the payoff for heavy attacks: light
+hits won't break a Brute or the boss, heavy ones will. Enemy HP bars show a blue poise meter
+under the HP.
+
+**Player getting hit:**
+- hit-stop, shake and zoom punch
+- red screen edges
+- the sprite flashes white, fades from red, and trembles
+- the sprite blinks during i-frames (`invulnerableBlinkRate`)
+- the screen edges pulse red at low HP (`lowHealthWarning`)
+- your combo resets
+
+**Other settings:**
+- **Damage numbers:** size, rise speed and lifetime. Quick hits on the same target stack upward
+  (`stackWindow`, `stackOffset`) instead of overlapping.
+- **Combo counter:** the count on the right side of the screen. `comboTimeout` is how long
+  before it resets; `comboMinimum` is how many hits before it appears.
+- **Enemy HP bars:** shown for `enemyBarLinger` seconds after an enemy is hit.
+- **Kills:** a small freeze on every kill; a long slow-motion when the boss dies.
 - **Global multipliers:**
-  - `hitStopScale`, `cameraShakeScale`, `knockbackScale`: set any of them to 0 to turn it off.
+  - `hitStopScale`, `cameraShakeScale`, `zoomPunchScale`, `knockbackScale`: set any of them to
+    0 to turn that effect off.
   - `enemyDamageScale`: a difficulty dial.
-- **Player getting hit:** hit-stop, shake, and red screen flash.
-- **Hit flash:** duration, color, and squash on hit.
-- **Damage numbers:**
-  - Font sizes (normal and crit), rise speed, lifetime, sideways scatter.
-  - Colors for damage dealt, crits, damage taken, and heals, plus the crit suffix.
-- **Effect toggles:** slashes, telegraphs, spark counts.
+
+**Player aim assist** (`Player.asset`): melee swings turn toward the nearest enemy within
+`meleeAimAssistAngle` degrees of the cursor, so near misses still connect. Set it to 0 to
+turn it off.
+
+> The committed config assets already have their `hitWeight` values set. If a local copy
+> shows `Auto` everywhere, pull again, or run **Vela → Reset Configs To Defaults**.
 
 ## 5. Replacing the placeholder art
 

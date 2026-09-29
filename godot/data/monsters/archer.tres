@@ -1,0 +1,144 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_5rw7g"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_3qwx4"]
+[ext_resource type="Resource" path="res://data/items/bone.tres" id="3_ytrer"]
+[ext_resource type="Resource" path="res://data/items/hood.tres" id="4_vhfjb"]
+[ext_resource type="Resource" path="res://data/items/boots.tres" id="5_clw53"]
+[ext_resource type="Resource" path="res://data/items/greaves.tres" id="6_cv2tq"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="7_rdh5f"]
+[ext_resource type="Script" path="res://scripts/config/loot_table.gd" id="8_tf1nr"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="9_5o63q"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="10_1c3qc"]
+[ext_resource type="Texture2D" path="res://art/SkeletonArcher.png" id="11_epghd"]
+
+[sub_resource type="Resource" id="Resource_y5ktb"]
+script = ExtResource("1_5rw7g")
+name = "Aimed Shot"
+kind = 3
+weight = 1.0
+min_range = 3.0
+max_range = 14.0
+cooldown = 1.8
+windup = 0.7
+active = 0.05
+recovery = 0.6
+track = true
+track_speed = 200.0
+damage = 12
+knockback = 4.0
+hit_weight = 1
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 13.0
+proj_range = 16.0
+proj_size = 0.25
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.4, 0.3, 0.5)
+
+[sub_resource type="Resource" id="Resource_it4ui"]
+script = ExtResource("1_5rw7g")
+name = "Scatter Volley"
+kind = 3
+weight = 0.5
+min_range = 3.0
+max_range = 10.0
+cooldown = 5.0
+windup = 1.0
+active = 0.05
+recovery = 0.7
+track = true
+track_speed = 120.0
+damage = 8
+knockback = 3.0
+hit_weight = 1
+radius = 2.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 5
+spread = 50.0
+volleys = 2
+volley_interval = 0.35
+proj_speed = 10.0
+proj_range = 12.0
+proj_size = 0.25
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.6, 0.2, 0.5)
+
+[sub_resource type="Resource" id="Resource_75gtn"]
+script = ExtResource("1_5rw7g")
+name = "Kick"
+kind = 0
+weight = 2.0
+min_range = 0.0
+max_range = 2.0
+cooldown = 2.0
+windup = 0.35
+active = 0.1
+recovery = 0.4
+track = true
+track_speed = 240.0
+damage = 6
+knockback = 10.0
+hit_weight = 2
+radius = 1.8
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.9, 0.6, 0.5)
+
+[sub_resource type="Resource" id="Resource_682l2"]
+script = ExtResource("8_tf1nr")
+gold_chance = 0.9
+gold_min = 3
+gold_max = 8
+guaranteed = Array[ExtResource("2_3qwx4")]([])
+rolls = 1
+nothing_weight = 1.0
+items = Array[ExtResource("2_3qwx4")]([ExtResource("3_ytrer"), ExtResource("4_vhfjb"), ExtResource("5_clw53"), ExtResource("6_cv2tq"), ExtResource("7_rdh5f")])
+weights = PackedFloat32Array(3, 1, 1, 0.5, 1)
+
+[resource]
+script = ExtResource("10_1c3qc")
+display_name = "Skeleton Archer"
+texture = ExtResource("11_epghd")
+world_height = 1.8
+shadow_size = 1.0
+hover = 0.0
+max_hp = 35
+radius = 0.45
+height = 1.7
+poise = 10.0
+stagger_duration = 0.4
+knockback_resist = 0.0
+alert_radius = 7.0
+immortal = false
+death_color = Color(0.9, 0.88, 0.8, 1)
+movement = 1
+move_speed = 3.0
+detection = 13.0
+leash = 24.0
+preferred = 7.0
+erratic_interval = 0.5
+decision_delay = 0.5
+attacks = Array[ExtResource("1_5rw7g")]([SubResource("Resource_y5ktb"), SubResource("Resource_it4ui"), SubResource("Resource_75gtn")])
+loot = SubResource("Resource_682l2")
+phases = Array[ExtResource("9_5o63q")]([])

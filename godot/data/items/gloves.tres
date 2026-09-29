@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Gloves_Down.png" id="1_8tbld"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_ioins"]
+[ext_resource type="Texture2D" path="res://art/Doll_Gloves_Side.png" id="3_t14i3"]
+[ext_resource type="Texture2D" path="res://art/Doll_Gloves_Up.png" id="4_swh1u"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_badbo"]
+
+[sub_resource type="Resource" id="Resource_wwfd4"]
+script = ExtResource("2_ioins")
+slot = "hands"
+down = ExtResource("1_8tbld")
+up = ExtResource("4_swh1u")
+side = ExtResource("3_t14i3")
+tint = Color(0.6, 0.42, 0.28, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_badbo")
+display_name = "Leather Gloves"
+icon = ExtResource("1_8tbld")
+rarity = 0
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_wwfd4")

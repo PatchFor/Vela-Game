@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Down.png" id="1_fokl3"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="2_soj3o"]
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Side.png" id="3_j75x7"]
+[ext_resource type="Texture2D" path="res://art/Doll_Plate_Up.png" id="4_gbhrr"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="5_ku7ts"]
+
+[sub_resource type="Resource" id="Resource_qovlj"]
+script = ExtResource("2_soj3o")
+slot = "chest"
+down = ExtResource("1_fokl3")
+up = ExtResource("4_gbhrr")
+side = ExtResource("3_j75x7")
+tint = Color(0.82, 0.86, 0.95, 1)
+hides_hair = false
+
+[resource]
+script = ExtResource("5_ku7ts")
+display_name = "Plate Armor"
+icon = ExtResource("1_fokl3")
+rarity = 2
+category = 3
+max_stack = 1
+heal = 0
+equipment = SubResource("Resource_qovlj")

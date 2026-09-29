@@ -350,6 +350,11 @@ namespace Vela.Enemies
 
             CreateTelegraphs();
             if (billboard != null) billboard.Punch(new Vector2(0.85f, 1.2f));
+
+            // Audio telegraph: heavy attacks get a deeper, longer cue.
+            var weight = DamageInfo.Resolve(attack.hitWeight, 0f, attack.damage);
+            Audio.Sfx.Play(weight >= HitWeight.Heavy ? Audio.SfxEvent.EnemyWindupHeavy : Audio.SfxEvent.EnemyWindup,
+                transform.position, 0.8f);
         }
 
         private void CreateTelegraphs()
@@ -621,7 +626,8 @@ namespace Vela.Enemies
         private DamageInfo MakeHit(Health victim)
         {
             var amount = Mathf.RoundToInt(attack.damage * VelaSettings.Feel.enemyDamageScale);
-            return CombatUtility.MakeHit(gameObject, Team.Enemy, victim, amount, false, attack.knockback, 0f, 0f, 0f);
+            return CombatUtility.MakeHit(gameObject, Team.Enemy, victim, amount, false, attack.knockback, 0f, 0f, 0f,
+                attack.hitWeight);
         }
 
         private void CancelAttack()
@@ -668,11 +674,13 @@ namespace Vela.Enemies
                 AlertGroup();
             }
 
+            var feel = VelaSettings.Feel;
             var resist = 1f - config.knockbackResistance;
-            var push = info.Direction * (info.Knockback * resist * VelaSettings.Feel.knockbackScale);
+            var weightPush = feel.Profile(info.Weight).knockbackMultiplier * (info.IsCrit ? 1.2f : 1f);
+            var push = info.Direction * (info.Knockback * resist * weightPush * feel.knockbackScale);
             if (push.sqrMagnitude > knockbackVelocity.sqrMagnitude) knockbackVelocity = push;
 
-            if (state == State.Transition || state == State.Dead) return;
+            if (state == State.Transition || state == State.Dead || !health.IsAlive) return;
 
             poiseDamage += info.Stagger;
             var staggered = config.poise <= 0f || poiseDamage >= config.poise;
@@ -682,8 +690,32 @@ namespace Vela.Enemies
             CancelAttack();
             state = State.Stagger;
             stateTimer = config.staggerDuration;
-            if (billboard != null) billboard.Punch(new Vector2(1.3f, 0.7f));
+            if (billboard != null) billboard.Punch(new Vector2(1.35f, 0.65f));
+
+            // Armored enemies announce a poise break: this is the payoff for heavy attacks.
+            if (config.poise > 0f) PoiseBreakFeedback();
         }
+
+        private void PoiseBreakFeedback()
+        {
+            var feel = VelaSettings.Feel;
+            var height = billboard != null ? billboard.Visual.worldHeight + billboard.Visual.hoverHeight : 1.8f;
+            DamageNumbers.Spawn(transform.position + Vector3.up * (height + 0.7f), feel.breakLabel, feel.breakColor, 1.25f);
+            FxManager.Ring(transform.position, 0.3f, config.colliderRadius * 2f + 1.5f, 0.3f, feel.breakColor);
+            FxManager.HitSpark(transform.position + Vector3.up * height * 0.6f, Vector3.up, feel.breakColor, 14);
+            if (billboard != null) billboard.HurtTint(feel.breakColor, config.staggerDuration);
+            HitStop.Request(feel.breakHitStop * feel.hitStopScale, billboard);
+            Audio.Sfx.Play(Audio.SfxEvent.Break, transform.position);
+            CameraShake.Add(feel.breakShake);
+        }
+
+        /// Time of the last hit taken (for the enemy health bar).
+        public float LastHitTime => lastHitTime;
+
+        /// How close the next hit is to breaking poise (0..1). 0 for enemies without poise.
+        public float PoiseNormalized => config != null && config.poise > 0f ? Mathf.Clamp01(poiseDamage / config.poise) : 0f;
+
+        public bool IsStaggered => state == State.Stagger;
 
         private void OnDied(Health self)
         {
@@ -692,9 +724,21 @@ namespace Vela.Enemies
             controller.enabled = false;
             CombatRegistry.Enemies.Remove(this);
 
-            FxManager.DeathBurst(transform.position + Vector3.up * 0.8f, config.deathBurstColor,
-                VelaSettings.Feel.deathBurstCount);
-            CameraShake.Add(0.2f);
+            Items.LootSpawner.Drop(config.loot, transform.position);
+
+            var feel = VelaSettings.Feel;
+            FxManager.DeathBurst(transform.position + Vector3.up * 0.8f, config.deathBurstColor, feel.deathBurstCount);
+            HitStop.Request(feel.killHitStop * feel.hitStopScale, billboard);
+            Audio.Sfx.Play(Audio.SfxEvent.Kill, transform.position);
+            CameraShake.Add(feel.killShake);
+
+            if (config is BossConfig)
+            {
+                HitStop.Request(0.25f * feel.hitStopScale, billboard);
+                HitStop.SlowMotion(feel.bossKillSlowMo, feel.bossKillSlowMoScale);
+                CameraShake.Add(0.6f);
+                CameraShake.Punch(0.12f);
+            }
 
             Defeated?.Invoke(this);
             AnyDefeated?.Invoke(this);

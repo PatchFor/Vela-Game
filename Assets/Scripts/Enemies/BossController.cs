@@ -77,6 +77,7 @@ namespace Vela.Enemies
             brain.SetBehaviour(phase.behaviour);
 
             Announcement = string.IsNullOrEmpty(phase.announcement) ? phase.name : phase.announcement;
+            Audio.Sfx.Play(Audio.SfxEvent.BossPhase, transform.position);
             AnnouncementTime = Time.time;
 
             Telegraph warning = null;
@@ -115,7 +116,7 @@ namespace Vela.Enemies
                 FxManager.Ring(transform.position, 0.2f, phase.shockwaveRadius * 0.7f, 0.35f, Color.white);
                 FxManager.Dust(transform.position, 24, new Color(0.7f, 0.65f, 0.6f, 0.9f));
                 CameraShake.Add(0.6f);
-                HitStop.Request(0.08f);
+                HitStop.Request(0.08f, billboard);
             }
 
             foreach (var summon in phase.summonOnEnter)

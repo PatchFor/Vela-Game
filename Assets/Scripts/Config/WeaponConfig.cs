@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Vela.Core;
 
 namespace Vela.Config
 {
@@ -18,6 +19,8 @@ namespace Vela.Config
     {
         public string name = "Slash";
         public AttackKind kind = AttackKind.MeleeArc;
+        [Tooltip("Clip in the character's animation set (e.g. slash, backslash, thrust). Its drawn parts stretch to this step's windup / active / recovery. Empty = the set's fallback attack.")]
+        public string animation = "";
 
         [Header("Damage")]
         public int damage = 10;
@@ -49,6 +52,9 @@ namespace Vela.Config
         public Color projectileColor = new Color(1f, 0.95f, 0.7f);
 
         [Header("Impact feel")]
+        [Tooltip("Light / Medium / Heavy / Finisher picks the impact profile in CombatFeel (hit-stop, shake, sparks, " +
+                 "number size, zoom punch). Auto guesses from stagger and damage.")]
+        public HitWeight hitWeight = HitWeight.Auto;
         public float knockback = 4f;
         [Tooltip("Poise damage dealt to enemies.")]
         public float stagger = 10f;
@@ -78,6 +84,8 @@ namespace Vela.Config
         public Color uiColor = Color.white;
         [Tooltip("Optional HUD icon.")]
         public Sprite icon;
+        [Tooltip("What the character holds (paper-doll weapon layer).")]
+        public Vela.Visual.EquipmentVisual visual;
 
         [Header("Crit")]
         [Range(0f, 1f)] public float critChance = 0.15f;
@@ -93,6 +101,13 @@ namespace Vela.Config
         public bool repeatWhileHeld;
         [Tooltip("Dash can cancel an attack's recovery.")]
         public bool canDashCancel = true;
+
+        [Header("Hit-confirm cancel")]
+        [Tooltip("Once an attack connects, you may cancel it early into the next combo hit, a dash or a skill " +
+                 "(even on weapons that normally can't dash-cancel). Rewards landing hits over mashing.")]
+        public bool hitConfirmCancel = true;
+        [Tooltip("Seconds after the hit connects before the cancel opens (lets the hit-stop read).")]
+        public float hitConfirmDelay = 0.06f;
 
         [Header("Charged attack (hold right click, release when full)")]
         public bool hasChargedAttack = true;

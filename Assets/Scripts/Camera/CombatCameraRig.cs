@@ -16,9 +16,26 @@ namespace Vela.CameraRig
             Trauma = Mathf.Clamp01(Trauma + amount * VelaSettings.Feel.cameraShakeScale);
         }
 
+        /// Current zoom-in kick as a fraction of camera distance (0 = none).
+        public static float ZoomPunch { get; private set; }
+
+        /// Quick zoom-in kick on big hits. `amount` is a fraction of the camera distance.
+        public static void Punch(float amount)
+        {
+            if (amount <= 0f) return;
+            ZoomPunch = Mathf.Clamp(Mathf.Max(ZoomPunch, amount * VelaSettings.Feel.zoomPunchScale), 0f, 0.4f);
+        }
+
         public static void Decay(float amount) => Trauma = Mathf.Max(0f, Trauma - amount);
 
-        public static void Reset() => Trauma = 0f;
+        /// Zoom punch eases back out over ~0.2 s (real time).
+        public static void DecayPunch(float dt) => ZoomPunch = Mathf.MoveTowards(ZoomPunch * Mathf.Exp(-12f * dt), 0f, 0.02f * dt);
+
+        public static void Reset()
+        {
+            Trauma = 0f;
+            ZoomPunch = 0f;
+        }
     }
 
     /// Locked 3/4 camera like Alabaster Dawn: fixed angle, follows the player, and the only
@@ -89,29 +106,35 @@ namespace Vela.CameraRig
             var player = CombatRegistry.Player;
             if (player != null && player.transform == target)
             {
-                var toAim = player.AimPoint - target.position;
+                // Lean toward the locked target if there is one, else a little toward the cursor.
+                var targeting = player.GetComponent<Player.PlayerTargeting>();
+                var lookAt = targeting != null && targeting.Target != null ? targeting.Target.transform.position : player.AimPoint;
+                var toAim = lookAt - target.position;
                 toAim.y = 0f;
-                wanted += Vector3.ClampMagnitude(toAim * 0.25f, settings.aimLookAhead);
+                wanted += Vector3.ClampMagnitude(toAim * (targeting != null && targeting.Target != null ? 0.4f : 0.25f),
+                    settings.aimLookAhead);
             }
 
             focus = Vector3.SmoothDamp(focus, wanted, ref focusVelocity, settings.followSmoothTime, Mathf.Infinity, dt);
 
             shakeTime += dt;
             CameraShake.Decay(settings.shakeDecay * dt);
-            Apply(CameraShake.Trauma);
+            CameraShake.DecayPunch(dt);
+            Apply(CameraShake.Trauma, CameraShake.ZoomPunch);
         }
 
-        private void Apply(float trauma)
+        private void Apply(float trauma, float zoomPunch = 0f)
         {
             var settings = Settings;
             if (cam == null) cam = GetComponent<Camera>();
 
+            var effectiveDistance = distance * (1f - zoomPunch);
             cam.orthographic = settings.orthographic;
             cam.fieldOfView = settings.fieldOfView;
-            cam.orthographicSize = distance * settings.orthoSizePerDistance;
+            cam.orthographicSize = effectiveDistance * settings.orthoSizePerDistance;
 
             var rotation = Quaternion.Euler(settings.pitch, settings.yaw, 0f);
-            var position = focus - rotation * Vector3.forward * distance;
+            var position = focus - rotation * Vector3.forward * effectiveDistance;
 
             if (trauma > 0f)
             {

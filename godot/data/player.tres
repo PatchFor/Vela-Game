@@ -1,0 +1,579 @@
+[gd_resource type="Resource" script_class="PlayerConfig" load_steps=43 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/player_config.gd" id="1_ghgy2"]
+[ext_resource type="Script" path="res://scripts/config/skill_config.gd" id="2_bxiu7"]
+[ext_resource type="Script" path="res://scripts/config/attack_step.gd" id="3_g6h57"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="4_mlnyv"]
+[ext_resource type="Resource" path="res://data/items/vest.tres" id="5_87vyj"]
+[ext_resource type="Resource" path="res://data/items/boots.tres" id="6_h8fsf"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="7_ym0iq"]
+[ext_resource type="Resource" path="res://data/items/hood.tres" id="8_5an62"]
+[ext_resource type="Script" path="res://scripts/config/weapon_config.gd" id="9_lfda8"]
+[ext_resource type="Texture2D" path="res://art/Doll_Sword_Down.png" id="10_s1cd1"]
+[ext_resource type="Script" path="res://scripts/config/equipment_visual.gd" id="11_d7mlo"]
+[ext_resource type="Texture2D" path="res://art/Doll_Sword_Side.png" id="12_mb8hh"]
+[ext_resource type="Texture2D" path="res://art/Doll_Sword_Up.png" id="13_cbfii"]
+[ext_resource type="Texture2D" path="res://art/Doll_Bow_Down.png" id="14_3a5r8"]
+[ext_resource type="Texture2D" path="res://art/Doll_Bow_Side.png" id="15_o1n5b"]
+[ext_resource type="Texture2D" path="res://art/Doll_Bow_Up.png" id="16_spetq"]
+[ext_resource type="Texture2D" path="res://art/Doll_Greatsword_Down.png" id="17_6f2je"]
+[ext_resource type="Texture2D" path="res://art/Doll_Greatsword_Side.png" id="18_4npkl"]
+[ext_resource type="Texture2D" path="res://art/Doll_Greatsword_Up.png" id="19_5ivqf"]
+
+[sub_resource type="Resource" id="Resource_qrf5j"]
+script = ExtResource("3_g6h57")
+name = "Spin Slash"
+kind = 0
+hit_weight = 3
+damage = 28
+variance = 0.1
+windup = 0.08
+active = 0.15
+recovery = 0.35
+attack_range = 3.0
+arc = 360.0
+lunge = 0.0
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 8.0
+stagger = 30.0
+hit_stop = 0.08
+shake = 0.25
+move_mult = 0.3
+super_armor = true
+slash_color = Color(0.7, 0.95, 1, 1)
+slash_width = 1.2
+slash_duration = 0.25
+reverse = false
+
+[sub_resource type="Resource" id="Resource_3eur0"]
+script = ExtResource("2_bxiu7")
+display_name = "Spin Slash"
+color = Color(0.55, 0.85, 1, 1)
+cooldown = 4.0
+crit_chance = 0.15
+crit_mult = 1.75
+attack = SubResource("Resource_qrf5j")
+
+[sub_resource type="Resource" id="Resource_2clou"]
+script = ExtResource("3_g6h57")
+name = "Piercing Shot"
+kind = 1
+hit_weight = 3
+damage = 30
+variance = 0.1
+windup = 0.15
+active = 0.02
+recovery = 0.3
+attack_range = 2.2
+arc = 120.0
+lunge = 0.6
+proj_count = 1
+spread = 0.0
+proj_speed = 36.0
+proj_range = 22.0
+pierce = 5
+proj_size = 0.3
+proj_color = Color(1, 0.9, 0.45, 1)
+knockback = 6.0
+stagger = 20.0
+hit_stop = 0.06
+shake = 0.15
+move_mult = 0.2
+super_armor = false
+slash_color = Color(1, 1, 1, 1)
+slash_width = 0.6
+slash_duration = 0.14
+reverse = false
+
+[sub_resource type="Resource" id="Resource_mlu4s"]
+script = ExtResource("2_bxiu7")
+display_name = "Piercing Shot"
+color = Color(1, 0.85, 0.4, 1)
+cooldown = 3.0
+crit_chance = 0.3
+crit_mult = 1.75
+attack = SubResource("Resource_2clou")
+
+[sub_resource type="Resource" id="Resource_tpyn7"]
+script = ExtResource("3_g6h57")
+name = "Ground Slam"
+kind = 0
+hit_weight = 4
+damage = 55
+variance = 0.1
+windup = 0.35
+active = 0.1
+recovery = 0.6
+attack_range = 4.0
+arc = 360.0
+lunge = 0.0
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 16.0
+stagger = 80.0
+hit_stop = 0.14
+shake = 0.5
+move_mult = 0.0
+super_armor = true
+slash_color = Color(1, 0.6, 0.3, 1)
+slash_width = 2.0
+slash_duration = 0.3
+reverse = false
+
+[sub_resource type="Resource" id="Resource_okody"]
+script = ExtResource("2_bxiu7")
+display_name = "Ground Slam"
+color = Color(1, 0.55, 0.3, 1)
+cooldown = 8.0
+crit_chance = 0.15
+crit_mult = 1.75
+attack = SubResource("Resource_tpyn7")
+
+[sub_resource type="Resource" id="Resource_741um"]
+script = ExtResource("3_g6h57")
+name = "Fan of Knives"
+kind = 1
+hit_weight = 2
+damage = 10
+variance = 0.1
+windup = 0.06
+active = 0.02
+recovery = 0.25
+attack_range = 2.2
+arc = 120.0
+lunge = 0.6
+proj_count = 7
+spread = 70.0
+proj_speed = 24.0
+proj_range = 12.0
+pierce = 0
+proj_size = 0.18
+proj_color = Color(0.85, 0.85, 1, 1)
+knockback = 3.0
+stagger = 8.0
+hit_stop = 0.03
+shake = 0.08
+move_mult = 0.5
+super_armor = false
+slash_color = Color(1, 1, 1, 1)
+slash_width = 0.6
+slash_duration = 0.14
+reverse = false
+
+[sub_resource type="Resource" id="Resource_p4ue4"]
+script = ExtResource("2_bxiu7")
+display_name = "Fan of Knives"
+color = Color(0.8, 0.8, 1, 1)
+cooldown = 5.0
+crit_chance = 0.15
+crit_mult = 1.75
+attack = SubResource("Resource_741um")
+
+[sub_resource type="Resource" id="Resource_eh27b"]
+script = ExtResource("3_g6h57")
+name = "Dash Strike"
+kind = 0
+hit_weight = 4
+damage = 40
+variance = 0.1
+windup = 0.0
+active = 0.18
+recovery = 0.35
+attack_range = 2.4
+arc = 100.0
+lunge = 5.5
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 12.0
+stagger = 40.0
+hit_stop = 0.12
+shake = 0.35
+move_mult = 0.0
+super_armor = true
+slash_color = Color(0.6, 0.9, 1, 1)
+slash_width = 1.0
+slash_duration = 0.2
+reverse = false
+
+[sub_resource type="Resource" id="Resource_pe2hi"]
+script = ExtResource("3_g6h57")
+name = "Slash"
+kind = 0
+hit_weight = 1
+damage = 12
+variance = 0.1
+windup = 0.05
+active = 0.08
+recovery = 0.2
+attack_range = 2.3
+arc = 130.0
+lunge = 0.5
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 3.0
+stagger = 8.0
+hit_stop = 0.04
+shake = 0.08
+move_mult = 0.2
+super_armor = false
+slash_color = Color(0.8, 0.95, 1, 1)
+slash_width = 0.6
+slash_duration = 0.13
+reverse = false
+
+[sub_resource type="Resource" id="Resource_amp0e"]
+script = ExtResource("3_g6h57")
+name = "Backslash"
+kind = 0
+hit_weight = 1
+damage = 12
+variance = 0.1
+windup = 0.05
+active = 0.08
+recovery = 0.2
+attack_range = 2.3
+arc = 130.0
+lunge = 0.5
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 3.0
+stagger = 8.0
+hit_stop = 0.04
+shake = 0.08
+move_mult = 0.2
+super_armor = false
+slash_color = Color(0.8, 0.95, 1, 1)
+slash_width = 0.6
+slash_duration = 0.13
+reverse = true
+
+[sub_resource type="Resource" id="Resource_vm3io"]
+script = ExtResource("3_g6h57")
+name = "Thrust Finisher"
+kind = 0
+hit_weight = 4
+damage = 22
+variance = 0.1
+windup = 0.1
+active = 0.1
+recovery = 0.35
+attack_range = 2.8
+arc = 70.0
+lunge = 1.4
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 9.0
+stagger = 25.0
+hit_stop = 0.09
+shake = 0.2
+move_mult = 0.1
+super_armor = false
+slash_color = Color(1, 1, 1, 1)
+slash_width = 0.9
+slash_duration = 0.16
+reverse = false
+
+[sub_resource type="Resource" id="Resource_erm0x"]
+script = ExtResource("11_d7mlo")
+slot = "weapon"
+down = ExtResource("10_s1cd1")
+up = ExtResource("13_cbfii")
+side = ExtResource("12_mb8hh")
+tint = Color(1, 1, 1, 1)
+hides_hair = false
+
+[sub_resource type="Resource" id="Resource_rouv2"]
+script = ExtResource("9_lfda8")
+display_name = "Sword"
+ui_color = Color(0.55, 0.85, 1, 1)
+visual = SubResource("Resource_erm0x")
+crit_chance = 0.15
+crit_mult = 1.75
+combo = Array[ExtResource("3_g6h57")]([SubResource("Resource_pe2hi"), SubResource("Resource_amp0e"), SubResource("Resource_vm3io")])
+combo_reset = 0.45
+input_buffer = 0.25
+repeat_held = false
+dash_cancel = true
+hit_confirm_cancel = true
+hit_confirm_delay = 0.06
+has_charged = true
+charge_time = 0.55
+charge_move_mult = 0.5
+charged = SubResource("Resource_eh27b")
+
+[sub_resource type="Resource" id="Resource_7i4b5"]
+script = ExtResource("3_g6h57")
+name = "Piercing Volley"
+kind = 1
+hit_weight = 3
+damage = 22
+variance = 0.1
+windup = 0.02
+active = 0.02
+recovery = 0.4
+attack_range = 2.2
+arc = 120.0
+lunge = 0.6
+proj_count = 3
+spread = 16.0
+proj_speed = 34.0
+proj_range = 22.0
+pierce = 3
+proj_size = 0.26
+proj_color = Color(0.7, 1, 0.6, 1)
+knockback = 7.0
+stagger = 25.0
+hit_stop = 0.07
+shake = 0.2
+move_mult = 0.3
+super_armor = false
+slash_color = Color(1, 1, 1, 1)
+slash_width = 0.6
+slash_duration = 0.14
+reverse = false
+
+[sub_resource type="Resource" id="Resource_nlocb"]
+script = ExtResource("3_g6h57")
+name = "Shot"
+kind = 1
+hit_weight = 1
+damage = 9
+variance = 0.1
+windup = 0.08
+active = 0.02
+recovery = 0.28
+attack_range = 2.2
+arc = 120.0
+lunge = 0.6
+proj_count = 1
+spread = 0.0
+proj_speed = 26.0
+proj_range = 18.0
+pierce = 0
+proj_size = 0.18
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 2.0
+stagger = 5.0
+hit_stop = 0.03
+shake = 0.04
+move_mult = 0.6
+super_armor = false
+slash_color = Color(1, 1, 1, 1)
+slash_width = 0.6
+slash_duration = 0.14
+reverse = false
+
+[sub_resource type="Resource" id="Resource_xeu1l"]
+script = ExtResource("11_d7mlo")
+slot = "weapon"
+down = ExtResource("14_3a5r8")
+up = ExtResource("16_spetq")
+side = ExtResource("15_o1n5b")
+tint = Color(1, 1, 1, 1)
+hides_hair = false
+
+[sub_resource type="Resource" id="Resource_waua8"]
+script = ExtResource("9_lfda8")
+display_name = "Bow"
+ui_color = Color(0.75, 1, 0.5, 1)
+visual = SubResource("Resource_xeu1l")
+crit_chance = 0.25
+crit_mult = 2.0
+combo = Array[ExtResource("3_g6h57")]([SubResource("Resource_nlocb")])
+combo_reset = 0.3
+input_buffer = 0.25
+repeat_held = true
+dash_cancel = true
+hit_confirm_cancel = true
+hit_confirm_delay = 0.06
+has_charged = true
+charge_time = 0.7
+charge_move_mult = 0.4
+charged = SubResource("Resource_7i4b5")
+
+[sub_resource type="Resource" id="Resource_3w0cg"]
+script = ExtResource("3_g6h57")
+name = "Whirlwind"
+kind = 0
+hit_weight = 4
+damage = 60
+variance = 0.1
+windup = 0.05
+active = 0.2
+recovery = 0.6
+attack_range = 3.6
+arc = 360.0
+lunge = 0.0
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 16.0
+stagger = 80.0
+hit_stop = 0.14
+shake = 0.5
+move_mult = 0.0
+super_armor = true
+slash_color = Color(1, 0.6, 0.3, 1)
+slash_width = 1.6
+slash_duration = 0.3
+reverse = false
+
+[sub_resource type="Resource" id="Resource_887im"]
+script = ExtResource("3_g6h57")
+name = "Cleave"
+kind = 0
+hit_weight = 3
+damage = 34
+variance = 0.1
+windup = 0.28
+active = 0.12
+recovery = 0.45
+attack_range = 3.2
+arc = 170.0
+lunge = 0.8
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 10.0
+stagger = 35.0
+hit_stop = 0.11
+shake = 0.3
+move_mult = 0.05
+super_armor = true
+slash_color = Color(1, 0.8, 0.5, 1)
+slash_width = 1.3
+slash_duration = 0.2
+reverse = false
+
+[sub_resource type="Resource" id="Resource_ijhik"]
+script = ExtResource("3_g6h57")
+name = "Overhead Smash"
+kind = 0
+hit_weight = 4
+damage = 52
+variance = 0.1
+windup = 0.36
+active = 0.12
+recovery = 0.6
+attack_range = 3.4
+arc = 110.0
+lunge = 1.0
+proj_count = 1
+spread = 0.0
+proj_speed = 24.0
+proj_range = 16.0
+pierce = 0
+proj_size = 0.2
+proj_color = Color(1, 0.95, 0.7, 1)
+knockback = 14.0
+stagger = 60.0
+hit_stop = 0.16
+shake = 0.45
+move_mult = 0.0
+super_armor = true
+slash_color = Color(1, 0.7, 0.4, 1)
+slash_width = 1.5
+slash_duration = 0.22
+reverse = true
+
+[sub_resource type="Resource" id="Resource_tla3j"]
+script = ExtResource("11_d7mlo")
+slot = "weapon"
+down = ExtResource("17_6f2je")
+up = ExtResource("19_5ivqf")
+side = ExtResource("18_4npkl")
+tint = Color(1, 1, 1, 1)
+hides_hair = false
+
+[sub_resource type="Resource" id="Resource_ofq8i"]
+script = ExtResource("9_lfda8")
+display_name = "Greatsword"
+ui_color = Color(1, 0.65, 0.3, 1)
+visual = SubResource("Resource_tla3j")
+crit_chance = 0.1
+crit_mult = 2.0
+combo = Array[ExtResource("3_g6h57")]([SubResource("Resource_887im"), SubResource("Resource_ijhik")])
+combo_reset = 0.6
+input_buffer = 0.35
+repeat_held = false
+dash_cancel = false
+hit_confirm_cancel = true
+hit_confirm_delay = 0.06
+has_charged = true
+charge_time = 0.9
+charge_move_mult = 0.25
+charged = SubResource("Resource_3w0cg")
+
+[resource]
+script = ExtResource("1_ghgy2")
+max_hp = 100
+iframes_after_hit = 0.6
+hurt_stun = 0.18
+move_speed = 6.5
+acceleration = 60.0
+deceleration = 70.0
+dash_speed = 20.0
+dash_time = 0.16
+dash_cooldown = 0.45
+dash_iframe_bonus = 0.08
+perfect_window = 0.15
+perfect_latency_allowance = 0.0
+perfect_slow_time = 0.5
+perfect_slow_scale = 0.3
+perfect_resets_dash = true
+counter_window = 1.5
+counter_mult = 1.5
+counter_always_crits = true
+jump_height = 1.8
+jump_time = 0.55
+jump_max_angle = 65.0
+lock_range = 14.0
+lock_break_range = 20.0
+aim_assist_angle = 40.0
+aim_assist_range = 1.2
+mouse_left = "attack"
+mouse_right = "skill_1"
+hover_radius = 0.9
+weapons = Array[ExtResource("9_lfda8")]([SubResource("Resource_rouv2"), SubResource("Resource_waua8"), SubResource("Resource_ofq8i")])
+skills = Array[ExtResource("2_bxiu7")]([SubResource("Resource_3eur0"), SubResource("Resource_mlu4s"), SubResource("Resource_okody"), SubResource("Resource_p4ue4")])
+starting_equipment = Array[ExtResource("4_mlnyv")]([ExtResource("5_87vyj"), ExtResource("6_h8fsf")])
+starting_items = Array[ExtResource("4_mlnyv")]([ExtResource("7_ym0iq"), ExtResource("7_ym0iq"), ExtResource("8_5an62")])

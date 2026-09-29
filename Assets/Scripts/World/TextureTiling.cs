@@ -26,6 +26,10 @@ namespace Vela.World
         [SerializeField] private float tileSize = 2f;
         [Tooltip("Mesh size at scale 1 (10 for Unity's Plane, 1 for Cube/Quad).")]
         [SerializeField] private float meshSize = 1f;
+        [Tooltip("Scroll the texture (water) in repeats per second. Play mode only.")]
+        [SerializeField] private Vector2 scroll;
+
+        private Vector2 offset;
 
         public void Configure(Mode newMode, float newTileSize, float newMeshSize)
         {
@@ -35,7 +39,18 @@ namespace Vela.World
             Apply();
         }
 
+        public void SetScroll(Vector2 speed) => scroll = speed;
+
         private void OnEnable() => Apply();
+
+        private void Update()
+        {
+            if (!Application.isPlaying || scroll == Vector2.zero) return;
+            offset += scroll * Time.deltaTime;
+            offset.x = Mathf.Repeat(offset.x, 1f);
+            offset.y = Mathf.Repeat(offset.y, 1f);
+            Apply();
+        }
 
         private void OnValidate() => Apply();
 
@@ -52,7 +67,7 @@ namespace Vela.World
 
             var block = new MaterialPropertyBlock();
             target.GetPropertyBlock(block);
-            var st = new Vector4(Mathf.Max(0.01f, repeat.x), Mathf.Max(0.01f, repeat.y), 0f, 0f);
+            var st = new Vector4(Mathf.Max(0.01f, repeat.x), Mathf.Max(0.01f, repeat.y), offset.x, offset.y);
             block.SetVector(MainTexSt, st);
             block.SetVector(BaseMapSt, st);
             target.SetPropertyBlock(block);

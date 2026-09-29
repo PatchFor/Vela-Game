@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://art/Icon_Gel.png" id="1_xgwib"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_hhc7r"]
+
+[resource]
+script = ExtResource("2_hhc7r")
+display_name = "Slime Gel"
+icon = ExtResource("1_xgwib")
+rarity = 0
+category = 2
+max_stack = 99
+heal = 0

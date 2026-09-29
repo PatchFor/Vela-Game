@@ -1,19 +1,29 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vela.CameraRig;
 using Vela.Combat;
 using Vela.Config;
 using Vela.Core;
 using Vela.FX;
 using Vela.Gameplay;
+using Vela.Items;
+using Vela.Visual;
 
 namespace Vela.Player
 {
-    /// Weapon handling. Left click runs the weapon's combo; hold right click to charge its
-    /// heavy attack and release when full. 1/2/3 (or Tab) switch weapons.
-    /// Every number comes from the WeaponConfig asset for that weapon.
+    /// Attacks, charge and skills.
+    ///  - Basic attack (J, or a mouse button bound to it) runs the weapon's combo.
+    ///  - Charged attack (hold K, or a bound mouse button) charges the weapon's heavy attack.
+    ///  - Skills on 1–4 (or bound mouse buttons), each with its own cooldown.
+    ///  - Tab cycles weapons.
+    /// Aim: locked target first; otherwise toward the mouse pointer when the attack came from
+    /// the mouse, or the facing direction when it came from the keyboard. Melee then gets a
+    /// soft aim assist toward the nearest monster in the cone.
     [RequireComponent(typeof(PlayerController))]
     public class PlayerCombat : MonoBehaviour
     {
+        public const int SkillSlots = 4;
+
         private enum Phase
         {
             Idle,
@@ -24,31 +34,61 @@ namespace Vela.Player
         }
 
         private PlayerController player;
+        private PlayerInputReader input;
+        private PlayerTargeting targeting;
+        private PaperDoll paperDoll;
         private WeaponConfig[] weapons = new WeaponConfig[0];
+        private SkillConfig[] skills = new SkillConfig[SkillSlots];
+        private readonly float[] skillReadyAt = new float[SkillSlots];
         private int weaponIndex;
 
         private Phase phase;
         private float phaseTimer;
         private AttackStep step;
-        private bool stepIsCharged;
+        private bool stepIsFinal;
+        private float stepCritChance;
+        private float stepCritMultiplier;
+        private Color stepColor = Color.white;
+        private bool aimFromMouse;
         private int comboIndex;
         private float lastStepEndedAt = -10f;
         private float bufferedAt = -10f;
+        private bool bufferedFromMouse;
         private Vector3 attackDirection;
         private bool swingFlip;
         private readonly HashSet<Health> hitThisStep = new HashSet<Health>();
+        private bool stepLanded;
+        private float landedAt;
 
         private float chargeTimer;
         private bool chargeReadyAnnounced;
+        private bool chargeFromMouse;
         private Telegraph chargeRing;
+
+        // Per-frame input, resolved from keys + mouse bindings.
+        private bool basicPressed;
+        private bool basicPressedByMouse;
+        private bool basicHeld;
+        private bool chargeHeld;
+        private bool chargeHeldByMouse;
+        private readonly bool[] skillPressed = new bool[SkillSlots];
+        private readonly bool[] skillPressedByMouse = new bool[SkillSlots];
+
+        public MouseAction LeftMouse { get; set; } = MouseAction.BasicAttack;
+        public MouseAction RightMouse { get; set; } = MouseAction.ChargedAttack;
 
         public WeaponConfig CurrentWeapon => weapons.Length > 0 ? weapons[weaponIndex] : null;
         public int WeaponIndex => weaponIndex;
         public IReadOnlyList<WeaponConfig> Weapons => weapons;
+        public IReadOnlyList<SkillConfig> Skills => skills;
         public int ComboIndex => comboIndex;
 
         /// True while any part of an attack (or a charge) is running.
         public bool IsBusy => phase != Phase.Idle;
+
+        /// The step being swung (windup / active / recovery), else null. For debug overlays.
+        public AttackStep CurrentStep => phase == Phase.Windup || phase == Phase.Active || phase == Phase.Recovery ? step : null;
+        public Vector3 AttackDirection => attackDirection;
 
         public bool IsCharging => phase == Phase.Charging;
 
@@ -64,13 +104,33 @@ namespace Vela.Player
             get
             {
                 if (phase == Phase.Idle || phase == Phase.Charging) return true;
+                if (HitConfirmOpen) return true;
                 return phase == Phase.Recovery && CurrentWeapon != null && CurrentWeapon.canDashCancel;
             }
         }
 
+        /// The current attack connected and its cancel window is open (dash, skill or next hit).
+        public bool HitConfirmOpen =>
+            stepLanded && (phase == Phase.Active || phase == Phase.Recovery) && CurrentWeapon != null &&
+            CurrentWeapon.hitConfirmCancel && Time.time - landedAt >= CurrentWeapon.hitConfirmDelay;
+
+        /// 0 = ready, 1 = just used.
+        public float SkillCooldownNormalized(int index)
+        {
+            var skill = index >= 0 && index < skills.Length ? skills[index] : null;
+            if (skill == null || skill.cooldown <= 0f) return 0f;
+            return Mathf.Clamp01((skillReadyAt[index] - Time.time) / skill.cooldown);
+        }
+
+        public float SkillCooldownRemaining(int index) =>
+            index >= 0 && index < SkillSlots ? Mathf.Max(0f, skillReadyAt[index] - Time.time) : 0f;
+
         private void Awake()
         {
             player = GetComponent<PlayerController>();
+            input = PlayerInputReader.For(gameObject);
+            targeting = GetComponent<PlayerTargeting>();
+            paperDoll = GetComponent<PaperDoll>();
         }
 
         private void Start()
@@ -79,7 +139,19 @@ namespace Vela.Player
             weapons = config != null && config.weapons != null ? config.weapons : new WeaponConfig[0];
             weapons = System.Array.FindAll(weapons, w => w != null);
             weaponIndex = config != null ? Mathf.Clamp(config.startingWeapon, 0, Mathf.Max(0, weapons.Length - 1)) : 0;
+
+            if (config != null)
+            {
+                for (var i = 0; i < SkillSlots; i++)
+                {
+                    skills[i] = config.skills != null && i < config.skills.Length ? config.skills[i] : null;
+                }
+                LeftMouse = config.leftMouse;
+                RightMouse = config.rightMouse;
+            }
+
             player.Dashed += OnDashed;
+            ApplyWeaponVisual();
         }
 
         private void OnDestroy()
@@ -100,6 +172,58 @@ namespace Vela.Player
             EndAttack(resetCombo: false);
         }
 
+        // ------------------------------------------------------------------ input
+
+        private void ReadInput()
+        {
+            var c = input.Current;
+            basicPressed = c.AttackKey;
+            basicPressedByMouse = false;
+            basicHeld = c.AttackKeyHeld;
+            chargeHeld = c.ChargeKeyHeld;
+            chargeHeldByMouse = false;
+            for (var i = 0; i < SkillSlots; i++)
+            {
+                skillPressed[i] = c.SkillKey == i;
+                skillPressedByMouse[i] = false;
+            }
+
+            ReadMouse(c.LeftDown, c.LeftHeld, LeftMouse);
+            ReadMouse(c.RightDown, c.RightHeld, RightMouse);
+        }
+
+        private void ReadMouse(bool down, bool held, MouseAction action)
+        {
+            switch (action)
+            {
+                case MouseAction.BasicAttack:
+                    if (down)
+                    {
+                        basicPressed = true;
+                        basicPressedByMouse = true;
+                    }
+                    basicHeld |= held;
+                    break;
+                case MouseAction.ChargedAttack:
+                    if (held && !chargeHeld) chargeHeldByMouse = true;
+                    chargeHeld |= held;
+                    break;
+                case MouseAction.Skill1:
+                case MouseAction.Skill2:
+                case MouseAction.Skill3:
+                case MouseAction.Skill4:
+                    var index = action - MouseAction.Skill1;
+                    if (down)
+                    {
+                        skillPressed[index] = true;
+                        skillPressedByMouse[index] = true;
+                    }
+                    break;
+            }
+        }
+
+        // ------------------------------------------------------------------ update
+
         private void Update()
         {
             player.MoveSpeedMultiplier = 1f;
@@ -109,28 +233,44 @@ namespace Vela.Player
                 return;
             }
 
+            ReadInput();
             HandleWeaponSwitch();
 
             var weapon = CurrentWeapon;
-            if (VelaInput.AttackPressed) bufferedAt = Time.time;
+            if (basicPressed)
+            {
+                bufferedAt = Time.time;
+                bufferedFromMouse = basicPressedByMouse;
+            }
             var buffered = Time.time - bufferedAt <= weapon.inputBufferTime;
 
-            if (player.IsDashing || player.IsStunned) return;
+            if (player.IsDashing || player.IsStunned || player.IsJumping) return;
+
+            // Skills can start from idle, while charging, cancel an attack's recovery, or cancel any
+            // attack that already connected (hit-confirm).
+            if (phase == Phase.Idle || phase == Phase.Charging || phase == Phase.Recovery || HitConfirmOpen)
+            {
+                for (var i = 0; i < SkillSlots; i++)
+                {
+                    if (skillPressed[i] && TryStartSkill(i, skillPressedByMouse[i])) return;
+                }
+            }
 
             phaseTimer -= Time.deltaTime;
 
             switch (phase)
             {
                 case Phase.Idle:
-                    if (weapon.hasChargedAttack && VelaInput.SpecialHeld)
+                    if (weapon.hasChargedAttack && chargeHeld)
                     {
-                        BeginCharge();
+                        BeginCharge(chargeHeldByMouse);
                     }
                     else if (weapon.combo != null && weapon.combo.Length > 0 &&
-                             (buffered || (weapon.repeatWhileHeld && VelaInput.AttackHeld)))
+                             (buffered || (weapon.repeatWhileHeld && basicHeld)))
                     {
                         if (Time.time - lastStepEndedAt > weapon.comboResetTime) comboIndex = 0;
-                        StartStep(weapon.combo[comboIndex % weapon.combo.Length], false);
+                        StartStep(weapon.combo[comboIndex % weapon.combo.Length], false, weapon.critChance,
+                            weapon.critMultiplier, weapon.uiColor, buffered ? bufferedFromMouse : basicHeld && !input.Current.AttackKeyHeld);
                     }
                     break;
 
@@ -140,14 +280,33 @@ namespace Vela.Player
 
                 case Phase.Windup:
                     player.MoveSpeedMultiplier = step.moveSpeedMultiplier;
-                    attackDirection = player.AimDirection;
+                    attackDirection = AimDirection(aimFromMouse, step);
                     player.Face(attackDirection);
+
+                    // Heavy swings glow while winding up: "something big is coming".
+                    if (IsHeavy(step) && player.Billboard != null && step.windup > 0f)
+                    {
+                        var progress = 1f - Mathf.Clamp01(phaseTimer / step.windup);
+                        player.Billboard.SetTint(Color.Lerp(Color.white, stepColor * 1.4f, progress * 0.85f));
+                    }
+
                     if (phaseTimer <= 0f) BeginActive();
                     break;
 
                 case Phase.Active:
                     player.MoveSpeedMultiplier = step.moveSpeedMultiplier;
                     if (step.kind == AttackKind.MeleeArc) SweepMelee();
+
+                    // Hit-confirm: a connected hit can chain straight into the next combo step.
+                    if (HitConfirmOpen && !stepIsFinal && comboIndex + 1 < weapon.combo.Length &&
+                        (buffered || (weapon.repeatWhileHeld && basicHeld)))
+                    {
+                        comboIndex++;
+                        StartStep(weapon.combo[comboIndex], false, weapon.critChance, weapon.critMultiplier,
+                            weapon.uiColor, buffered ? bufferedFromMouse : aimFromMouse);
+                        break;
+                    }
+
                     if (phaseTimer <= 0f)
                     {
                         phase = Phase.Recovery;
@@ -159,18 +318,19 @@ namespace Vela.Player
                     player.MoveSpeedMultiplier = Mathf.Lerp(1f, step.moveSpeedMultiplier, 0.5f);
 
                     // Chain into the next combo step as soon as the player asks.
-                    var hasNext = !stepIsCharged && comboIndex + 1 < weapon.combo.Length;
-                    var wantsNext = buffered || (weapon.repeatWhileHeld && VelaInput.AttackHeld);
+                    var hasNext = !stepIsFinal && comboIndex + 1 < weapon.combo.Length;
+                    var wantsNext = buffered || (weapon.repeatWhileHeld && basicHeld);
                     if (hasNext && wantsNext)
                     {
                         comboIndex++;
-                        StartStep(weapon.combo[comboIndex], false);
+                        StartStep(weapon.combo[comboIndex], false, weapon.critChance, weapon.critMultiplier,
+                            weapon.uiColor, buffered ? bufferedFromMouse : aimFromMouse);
                         break;
                     }
 
                     if (phaseTimer <= 0f)
                     {
-                        var finishedCombo = stepIsCharged || comboIndex + 1 >= weapon.combo.Length;
+                        var finishedCombo = stepIsFinal || comboIndex + 1 >= weapon.combo.Length;
                         EndAttack(resetCombo: false);
                         comboIndex = finishedCombo ? 0 : comboIndex + 1;
                     }
@@ -180,27 +340,98 @@ namespace Vela.Player
 
         private void HandleWeaponSwitch()
         {
-            var slot = VelaInput.WeaponSlotPressed;
-            if (VelaInput.CycleWeaponPressed && weapons.Length > 0) slot = (weaponIndex + 1) % weapons.Length;
-            if (slot < 0 || slot >= weapons.Length || slot == weaponIndex) return;
+            if (!input.Current.CycleWeapon || weapons.Length < 2) return;
 
-            weaponIndex = slot;
+            weaponIndex = (weaponIndex + 1) % weapons.Length;
             comboIndex = 0;
             EndAttack(resetCombo: true);
+            ApplyWeaponVisual();
 
             var weapon = CurrentWeapon;
-            DamageNumbers.Spawn(transform.position + Vector3.up * 2.4f, weapon.displayName, weapon.uiColor,
-                VelaSettings.Feel.fontSize);
+            DamageNumbers.Spawn(transform.position + Vector3.up * 2.4f, weapon.displayName, weapon.uiColor, 0.9f);
             FxManager.Ring(transform.position, 0.3f, 1.4f, 0.25f, weapon.uiColor);
+        }
+
+        private void ApplyWeaponVisual()
+        {
+            if (paperDoll == null) return;
+            var weapon = CurrentWeapon;
+            paperDoll.SetEquipment(EquipmentSlot.Weapon, weapon != null ? weapon.visual : null);
+        }
+
+        // ------------------------------------------------------------------ aim
+
+        private Vector3 AimDirection(bool fromMouse, AttackStep s)
+        {
+            if (targeting != null && targeting.DirectionToTarget.HasValue) return targeting.DirectionToTarget.Value;
+            return fromMouse ? player.PointerDirection : player.Facing;
+        }
+
+        private static bool IsHeavy(AttackStep s)
+        {
+            var weight = DamageInfo.Resolve(s.hitWeight, s.stagger, s.damage);
+            return weight == HitWeight.Heavy || weight == HitWeight.Finisher;
+        }
+
+        /// Soft aim assist: swing toward the nearest monster inside a cone around the aim, so near
+        /// misses still connect. Skipped while locked on (the lock already aims).
+        private Vector3 AssistedDirection(Vector3 aim, float reach)
+        {
+            var config = player.Config;
+            if (config == null || config.meleeAimAssistAngle <= 0f) return aim;
+            if (targeting != null && targeting.HasTarget) return aim;
+
+            var best = aim;
+            var bestScore = float.MaxValue;
+            var maxDistance = reach + config.meleeAimAssistRange;
+            foreach (var enemy in CombatRegistry.Enemies)
+            {
+                if (enemy == null || !enemy.IsAlive) continue;
+                var offset = CombatUtility.Flat(enemy.transform.position - transform.position);
+                var distance = offset.magnitude;
+                if (distance < 0.01f || distance > maxDistance) continue;
+
+                var angle = Vector3.Angle(aim, offset);
+                if (angle > config.meleeAimAssistAngle) continue;
+
+                var score = angle + distance * 4f;
+                if (score >= bestScore) continue;
+                bestScore = score;
+                best = offset / distance;
+            }
+            return best;
+        }
+
+        // ------------------------------------------------------------------ skills
+
+        private bool TryStartSkill(int index, bool fromMouse)
+        {
+            var skill = skills[index];
+            if (skill == null || skill.attack == null) return false;
+
+            if (Time.time < skillReadyAt[index])
+            {
+                // Tell the player why nothing happened.
+                HudMessages.Show($"{skill.displayName}: {SkillCooldownRemaining(index):0.0}s", new Color(1f, 1f, 1f, 0.7f), 0.6f);
+                return false;
+            }
+
+            ReleaseChargeRing();
+            skillReadyAt[index] = Time.time + skill.cooldown;
+            Audio.Sfx.Play(Audio.SfxEvent.SkillCast, transform.position);
+            StartStep(skill.attack, true, skill.critChance, skill.critMultiplier, skill.color, fromMouse);
+            FxManager.Ring(transform.position, 0.2f, 1.6f, 0.2f, skill.color);
+            return true;
         }
 
         // ------------------------------------------------------------------ charge
 
-        private void BeginCharge()
+        private void BeginCharge(bool fromMouse)
         {
             phase = Phase.Charging;
             chargeTimer = 0f;
             chargeReadyAnnounced = false;
+            chargeFromMouse = fromMouse;
             ReleaseChargeRing();
             chargeRing = Telegraph.Create(TelegraphShape.Circle, transform.position, Vector3.forward, 1.1f, 0f,
                 CurrentWeapon.uiColor * new Color(1f, 1f, 1f, 0.6f));
@@ -210,7 +441,7 @@ namespace Vela.Player
         {
             player.MoveSpeedMultiplier = weapon.chargeMoveSpeedMultiplier;
             chargeTimer += Time.deltaTime;
-            player.Face(player.AimDirection);
+            player.Face(AimDirection(chargeFromMouse, weapon.chargedAttack));
 
             var progress = ChargeNormalized;
             if (chargeRing != null)
@@ -224,14 +455,16 @@ namespace Vela.Player
                 chargeReadyAnnounced = true;
                 FxManager.Ring(transform.position, 0.4f, 1.8f, 0.2f, Color.white);
                 if (player.Billboard != null) player.Billboard.Flash(weapon.uiColor, 0.08f);
+                Audio.Sfx.Play(Audio.SfxEvent.ChargeReady, transform.position);
             }
 
-            if (VelaInput.SpecialHeld) return;
+            if (chargeHeld) return;
 
             ReleaseChargeRing();
             if (progress >= 1f)
             {
-                StartStep(weapon.chargedAttack, true);
+                StartStep(weapon.chargedAttack, true, weapon.critChance, weapon.critMultiplier, weapon.uiColor,
+                    chargeFromMouse);
             }
             else
             {
@@ -248,19 +481,27 @@ namespace Vela.Player
 
         // ------------------------------------------------------------------ attack steps
 
-        private void StartStep(AttackStep next, bool charged)
+        private void StartStep(AttackStep next, bool final, float critChance, float critMultiplier, Color color,
+            bool fromMouse)
         {
             step = next;
-            stepIsCharged = charged;
+            stepIsFinal = final;
+            stepCritChance = critChance;
+            stepCritMultiplier = critMultiplier;
+            stepColor = color;
+            aimFromMouse = fromMouse;
             bufferedAt = -10f;
             hitThisStep.Clear();
+            stepLanded = false;
             phase = Phase.Windup;
             phaseTimer = step.windup;
-            attackDirection = player.AimDirection;
+            attackDirection = AimDirection(aimFromMouse, step);
             player.Face(attackDirection);
             swingFlip = !swingFlip;
 
             if (player.Billboard != null) player.Billboard.Punch(new Vector2(0.85f, 1.15f));
+            // The drawn animation stretches its parts to this step's timing.
+            if (paperDoll != null) paperDoll.PlayAttack(step.animation, step.windup, step.active, step.recovery);
             if (phaseTimer <= 0f) BeginActive();
         }
 
@@ -268,41 +509,59 @@ namespace Vela.Player
         {
             phase = Phase.Active;
             phaseTimer = step.active;
-            attackDirection = player.AimDirection;
-            player.Face(attackDirection);
+            attackDirection = AimDirection(aimFromMouse, step);
 
-            if (player.Billboard != null) player.Billboard.Punch(new Vector2(1.2f, 0.85f));
+            if (player.Billboard != null)
+            {
+                player.Billboard.SetTint(Color.white);
+                var heavy = IsHeavy(step);
+                player.Billboard.Punch(heavy ? new Vector2(1.3f, 0.78f) : new Vector2(1.2f, 0.85f));
+                // Heavy swings have weight even when they whiff.
+                if (heavy) CameraShake.Add(0.06f);
+            }
 
             if (step.kind == AttackKind.MeleeArc)
             {
+                Audio.Sfx.Play(IsHeavy(step) ? Audio.SfxEvent.SwingHeavy : Audio.SfxEvent.SwingLight, transform.position);
+            }
+            else
+            {
+                Audio.Sfx.Play(Audio.SfxEvent.Shoot, transform.position);
+            }
+
+            if (step.kind == AttackKind.MeleeArc)
+            {
+                attackDirection = AssistedDirection(attackDirection, step.range);
+                player.Face(attackDirection);
+
                 if (step.lungeDistance > 0f)
                 {
                     var duration = Mathf.Max(0.05f, step.active);
                     player.ApplyImpulse(attackDirection * (step.lungeDistance / duration), duration);
                 }
 
-                var reverse = step.reverseSwing ^ (swingFlip && !stepIsCharged);
+                var reverse = step.reverseSwing ^ (swingFlip && !stepIsFinal);
                 FxManager.Slash(transform.position, attackDirection, step.range, step.slashWidth, step.arcDegrees,
                     step.slashColor, step.slashDuration, reverse);
                 SweepMelee();
             }
             else
             {
+                player.Face(attackDirection);
                 FireProjectiles();
             }
         }
 
         private void SweepMelee()
         {
-            var weapon = CurrentWeapon;
             var s = step;
-            CombatUtility.MeleeArc(transform.position, attackDirection, s.range, s.arcDegrees, Team.Player,
-                hitThisStep, victim => BuildHit(victim, weapon, s));
+            var landed = CombatUtility.MeleeArc(transform.position, attackDirection, s.range, s.arcDegrees, Team.Player,
+                hitThisStep, victim => BuildHit(victim, s));
+            if (landed > 0) OnStepLanded();
         }
 
         private void FireProjectiles()
         {
-            var weapon = CurrentWeapon;
             var s = step;
             var count = Mathf.Max(1, s.projectileCount);
             var fx = VelaSettings.Fx;
@@ -325,7 +584,8 @@ namespace Vela.Player
                     Color = s.projectileColor,
                     Sprite = fx.arrowSprite,
                     SpriteLength = 0.9f + s.projectileSize,
-                    MakeHit = victim => BuildHit(victim, weapon, s)
+                    MakeHit = victim => BuildHit(victim, s),
+                    OnLanded = _ => OnStepLanded()
                 });
             }
 
@@ -334,14 +594,34 @@ namespace Vela.Player
             player.ApplyImpulse(-attackDirection * 2f, 0.06f);
         }
 
-        private DamageInfo BuildHit(Health victim, WeaponConfig weapon, AttackStep s)
+        private void OnStepLanded()
         {
-            var crit = Random.value < weapon.critChance;
-            var amount = CombatUtility.RollDamage(s.damage, s.damageVariance);
-            if (crit) amount = Mathf.RoundToInt(amount * weapon.critMultiplier);
+            if (stepLanded) return;
+            stepLanded = true;
+            landedAt = Time.time;
+        }
 
-            return CombatUtility.MakeHit(gameObject, Team.Player, victim, amount, crit,
-                s.knockback, s.stagger, s.hitStop, s.cameraShake);
+        private DamageInfo BuildHit(Health victim, AttackStep s)
+        {
+            var feel = VelaSettings.Feel;
+            var config = player.Config;
+            var counter = player.CounterActive;
+            var enemy = victim.GetComponent<Enemies.EnemyBrain>();
+            var punish = enemy != null && enemy.IsStaggered;
+
+            var crit = VelaRandom.Chance(stepCritChance) || (counter && config.counterAlwaysCrits);
+            var amount = (float)CombatUtility.RollDamage(s.damage, s.damageVariance);
+            if (crit) amount *= stepCritMultiplier;
+            if (punish) amount *= feel.punishDamageMultiplier;
+            if (counter) amount *= config.counterDamageMultiplier;
+
+            var hit = CombatUtility.MakeHit(gameObject, Team.Player, victim, Mathf.RoundToInt(amount), crit,
+                s.knockback, s.stagger, s.hitStop, s.cameraShake, s.hitWeight);
+            hit.IsPunish = punish;
+            hit.IsCounter = counter;
+            // Punishes and counters hit one weight class harder.
+            if ((punish || counter) && hit.Weight < HitWeight.Finisher) hit.Weight++;
+            return hit;
         }
 
         private void EndAttack(bool resetCombo)
@@ -349,7 +629,9 @@ namespace Vela.Player
             if (phase != Phase.Idle && phase != Phase.Charging) lastStepEndedAt = Time.time;
             phase = Phase.Idle;
             phaseTimer = 0f;
+            if (paperDoll != null) paperDoll.StopAttack();
             ReleaseChargeRing();
+            if (player != null && player.Billboard != null) player.Billboard.SetTint(Color.white);
             if (resetCombo) comboIndex = 0;
         }
     }

@@ -17,6 +17,9 @@ namespace Vela.Core
         public event Action<Health, int> Healed;
         public event Action<Health> Died;
 
+        /// A hit reached this target but i-frames stopped it (dash / jump). Perfect dodge hooks in here.
+        public event Action<Health, DamageInfo> Evaded;
+
         public int Max => maxHealth;
         public int Current => current;
         public Team Team => team;
@@ -44,9 +47,19 @@ namespace Vela.Core
 
         public bool CanBeHurtBy(Team attacker) => attacker != team && IsAlive && !IsInvulnerable;
 
+        /// Hostile and alive — a valid thing to swing at, even if i-frames will stop the hit.
+        public bool IsTargetableBy(Team attacker) => attacker != team && IsAlive;
+
+        /// Returns true if damage was dealt. Hits blocked by i-frames raise `Evaded` and return false.
         public bool ApplyDamage(DamageInfo info)
         {
-            if (info.Amount <= 0 || !CanBeHurtBy(info.SourceTeam)) return false;
+            if (info.Amount <= 0 || !IsTargetableBy(info.SourceTeam)) return false;
+
+            if (IsInvulnerable)
+            {
+                Evaded?.Invoke(this, info);
+                return false;
+            }
 
             var floor = Immortal ? 1 : 0;
             current = Mathf.Max(floor, current - info.Amount);

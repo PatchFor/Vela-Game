@@ -29,6 +29,12 @@ namespace Vela.EditorTools
         private static Material bark;
         private static Material leaves;
         private static Material rock;
+        private static Material water;
+
+        /// Bump when the generated scene changes. PlayModeBootstrap offers a rebuild when the
+        /// saved scene is older than this.
+        public const int SceneVersion = 4;
+        public const string VersionFile = "Assets/Scenes/.combat_scene_version";
 
         [MenuItem("Vela/Build Combat Prototype Scene", priority = 0)]
         public static void BuildScene()
@@ -74,13 +80,15 @@ namespace Vela.EditorTools
 
         private static void Build()
         {
+            // Create the scene FIRST: NewScene unloads unused assets, which would destroy
+            // configs/materials loaded before it (MissingReferenceException on MonsterConfig).
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
             PlaceholderArt.EnsureFolder("Assets/Scenes");
             PlaceholderArt.EnsureFolder(MaterialsFolder);
 
             BuildMaterials();
             var configs = ConfigDefaults.CreateAll(BuildFxMaterials());
-
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             SetUpLighting();
             var level = new GameObject("Level").transform;
@@ -89,6 +97,7 @@ namespace Vela.EditorTools
             BuildBorder(level);
             BuildLandmarks(level);
             var bossEntrance = BuildBossArena(level);
+            BuildRiver(level);
 
             var player = BuildPlayer(configs, new Vector3(0f, 0f, -34f));
             BuildCamera(configs, player.transform);
@@ -96,11 +105,16 @@ namespace Vela.EditorTools
 
             var manager = new GameObject("GameManager").AddComponent<CombatGameManager>();
             manager.Configure(configs.Feel, configs.Camera, configs.Fx, bossEntrance);
-            new GameObject("HUD").AddComponent<CombatHUD>();
+            manager.ConfigureLoot(configs.Loot, configs.DebugLoot, configs.Wardrobe);
+            manager.ConfigureAudio(configs.Sfx);
+            var hud = new GameObject("HUD");
+            hud.AddComponent<CombatHUD>();
+            hud.AddComponent<InventoryUI>();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddSceneToBuildSettings();
+            System.IO.File.WriteAllText(VersionFile, SceneVersion.ToString());
 
             Selection.activeObject = configs.Player;
             Debug.Log($"Vela: combat prototype built at {ScenePath}. Press Play. Configs live in {ConfigDefaults.Root}.");
@@ -117,6 +131,7 @@ namespace Vela.EditorTools
             bark = WorldMaterial("Bark", PlaceholderArt.Bark(), Color.white);
             leaves = WorldMaterial("Leaves", PlaceholderArt.Leaves(), Color.white);
             rock = WorldMaterial("Rock", PlaceholderArt.Stone(), new Color(0.75f, 0.7f, 0.65f));
+            water = WorldMaterial("Water", PlaceholderArt.Water(), Color.white);
         }
 
         private static ConfigDefaults.Materials BuildFxMaterials()
@@ -289,6 +304,82 @@ namespace Vela.EditorTools
             Wall(root, "Ruin_NW", new Vector3(-20f, 0f, 24f), new Vector3(6f, 3f, 1f));
         }
 
+        /// A river between the spawn and the hub: walk across the bridge on the east side, or
+        /// dash at one of the two marked edges to jump over.
+        private static void BuildRiver(Transform parent)
+        {
+            var root = new GameObject("River").transform;
+            root.SetParent(parent, false);
+
+            const float z = -19f;
+            const float width = 4f;
+            const float bridgeX = 16f;
+            const float bridgeHalf = 2.5f;
+
+            var surface = CreateBox(root, "Water", new Vector3(0f, 0.025f, z), new Vector3(64f, 0.03f, width), water, false,
+                TextureTiling.Mode.Floor, 2f);
+            Object.DestroyImmediate(surface.GetComponent<Collider>());
+            surface.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+            surface.GetComponent<TextureTiling>().SetScroll(new Vector2(0.06f, 0.015f));
+
+            // Invisible walls so you can't walk into the water (arrows fly over it).
+            WaterBlocker(root, -32f, bridgeX - bridgeHalf, z, width);
+            WaterBlocker(root, bridgeX + bridgeHalf, 32f, z, width);
+
+            // Bridge
+            var deck = CreateBox(root, "Bridge", new Vector3(bridgeX, 0.08f, z), new Vector3(bridgeHalf * 2f, 0.12f, width + 2f),
+                bark, false, TextureTiling.Mode.Floor, 1f);
+            deck.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+            LowWall(root, "Bridge_Rail_W", new Vector3(bridgeX - bridgeHalf, 0f, z), new Vector3(0.3f, 0.7f, width + 2f));
+            LowWall(root, "Bridge_Rail_E", new Vector3(bridgeX + bridgeHalf, 0f, z), new Vector3(0.3f, 0.7f, width + 2f));
+
+            // Jump links: dash near the marked edge, toward the other side.
+            JumpPoints(root, "Jump_Main", new Vector3(0f, 0f, z - width * 0.5f - 1.4f), new Vector3(0f, 0f, z + width * 0.5f + 1.4f));
+            JumpPoints(root, "Jump_West", new Vector3(-14f, 0f, z - width * 0.5f - 1.2f), new Vector3(-14f, 0f, z + width * 0.5f + 1.2f));
+
+            // Stepping stones as visual cue for where the jumps are.
+            foreach (var x in new[] { 0f, -14f })
+            {
+                var stone = CreateBox(root, "SteppingStone", new Vector3(x, 0.05f, z), new Vector3(1.1f, 0.12f, 0.9f), rock, false,
+                    TextureTiling.Mode.Floor, 1f);
+                Object.DestroyImmediate(stone.GetComponent<Collider>());
+            }
+        }
+
+        private static void WaterBlocker(Transform parent, float xMin, float xMax, float z, float width)
+        {
+            var blocker = new GameObject("WaterBlocker");
+            blocker.transform.SetParent(parent, false);
+            blocker.transform.position = new Vector3((xMin + xMax) * 0.5f, 1.5f, z);
+            var box = blocker.AddComponent<BoxCollider>();
+            box.size = new Vector3(xMax - xMin, 3f, width - 0.4f);
+            blocker.AddComponent<ProjectilePassThrough>();
+        }
+
+        private static void JumpPoints(Transform parent, string name, Vector3 a, Vector3 b)
+        {
+            var link = new GameObject(name);
+            link.transform.SetParent(parent, false);
+            link.transform.position = (a + b) * 0.5f;
+
+            var pointA = new GameObject("A").transform;
+            pointA.SetParent(link.transform, false);
+            pointA.position = a;
+            var pointB = new GameObject("B").transform;
+            pointB.SetParent(link.transform, false);
+            pointB.position = b;
+
+            link.AddComponent<JumpLink>().Configure(pointA, pointB, 1.8f);
+
+            // Edge markers on both banks.
+            foreach (var p in new[] { a, b })
+            {
+                var marker = CreateBox(link.transform, "EdgeMarker", p + Vector3.up * 0.02f, new Vector3(1.4f, 0.03f, 0.5f), path, false,
+                    TextureTiling.Mode.Floor, 1f);
+                Object.DestroyImmediate(marker.GetComponent<Collider>());
+            }
+        }
+
         private static Transform BuildBossArena(Transform parent)
         {
             var root = new GameObject("BossArena").transform;
@@ -383,6 +474,7 @@ namespace Vela.EditorTools
             controller.stepOffset = 0.35f;
             controller.slopeLimit = 50f;
 
+            player.AddComponent<PlayerInputReader>();
             player.AddComponent<Health>();
             player.AddComponent<SpriteBillboard>();
             player.AddComponent<DamageFeedback>();
@@ -392,7 +484,17 @@ namespace Vela.EditorTools
             serialized.FindProperty("config").objectReferenceValue = configs.Player;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
+            var paperDoll = player.AddComponent<PaperDoll>();
+            var dollSerialized = new SerializedObject(paperDoll);
+            dollSerialized.FindProperty("rig").objectReferenceValue = configs.Player.rig;
+            dollSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            player.AddComponent<PlayerInventory>();
+            player.AddComponent<PlayerTargeting>();
+            player.AddComponent<ItemPickupController>();
             player.AddComponent<PlayerCombat>();
+            player.AddComponent<AnimationTestbench>().Configure(configs.SwordSkins);
+            player.AddComponent<DollDebugOverlay>();
             return player;
         }
 

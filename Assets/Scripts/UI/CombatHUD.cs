@@ -3,7 +3,10 @@ using Vela.Combat;
 using Vela.Core;
 using Vela.Enemies;
 using Vela.Gameplay;
+using Vela.Config;
+using Vela.Items;
 using Vela.Player;
+using Vela.World;
 
 namespace Vela.UI
 {
@@ -58,9 +61,15 @@ namespace Vela.UI
             small.fontSize = Mathf.RoundToInt(16 * s);
             center.fontSize = Mathf.RoundToInt(34 * s);
 
-            DrawHurtFlash();
+            DrawScreenEffects();
+            DrawEnemyBars(s);
+            DrawCombo(s);
             DrawPlayer(s);
-            DrawWeapons(s);
+            DrawItemLabels(s);
+            DrawSkillBar(s);
+            DrawMessages(s);
+            DrawTargetFrame(s);
+            DrawJumpPrompt(s);
             DrawCharge(s);
             DrawBoss(s);
             DrawHelp(s);
@@ -76,6 +85,26 @@ namespace Vela.UI
             small.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
             center = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             center.normal.textColor = Color.white;
+            comboStyle = new GUIStyle(center) { alignment = TextAnchor.MiddleRight, clipping = TextClipping.Overflow };
+
+            // Transparent middle, opaque edges: used for hurt / low-HP / crit screen effects.
+            const int size = 64;
+            vignette = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (var y = 0; y < size; y++)
+            for (var x = 0; x < size; x++)
+            {
+                var d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(size * 0.5f, size * 0.5f)) / (size * 0.5f);
+                vignette.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.45f, 1.05f, d))));
+            }
+            vignette.Apply();
+        }
+
+        private GUIStyle comboStyle;
+        private Texture2D vignette;
+
+        private void OnDestroy()
+        {
+            if (vignette != null) Destroy(vignette);
         }
 
         private static void Fill(Rect r, Color c)
@@ -94,11 +123,113 @@ namespace Vela.UI
             Fill(new Rect(r.x, r.y, r.width * value, r.height), color);
         }
 
-        private void DrawHurtFlash()
+        private void DrawVignette(Color color)
         {
-            if (Time.unscaledTime >= hurtFlashUntil) return;
-            var t = (hurtFlashUntil - Time.unscaledTime) / hurtFlashDuration;
-            Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.3f * t));
+            var previous = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), vignette, ScaleMode.StretchToFill);
+            GUI.color = previous;
+        }
+
+        private void DrawScreenEffects()
+        {
+            var feel = VelaSettings.Feel;
+            var now = Time.unscaledTime;
+
+            // Low health: slow red pulse on the screen edges.
+            var player = CombatRegistry.Player;
+            if (player != null && player.IsAlive && player.Health.Normalized <= feel.lowHealthWarning)
+            {
+                var pulse = 0.25f + 0.2f * Mathf.Sin(now * 5f);
+                DrawVignette(new Color(0.8f, 0.05f, 0.05f, pulse));
+            }
+
+            // Took a hit: strong red edges plus a faint full-screen tint.
+            if (now < hurtFlashUntil)
+            {
+                var t = (hurtFlashUntil - now) / hurtFlashDuration;
+                DrawVignette(new Color(1f, 0.1f, 0.1f, 0.85f * t));
+                Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.9f, 0.1f, 0.1f, 0.12f * t));
+            }
+
+            // Crit: very short white pop.
+            var critAge = now - ComboTracker.LastCritTime;
+            if (critAge < 0.1f && feel.critScreenFlash > 0f)
+            {
+                var t = 1f - critAge / 0.1f;
+                Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(1f, 1f, 0.9f, feel.critScreenFlash * t));
+                DrawVignette(new Color(feel.critColor.r, feel.critColor.g, feel.critColor.b, 0.5f * t));
+            }
+        }
+
+        /// Small HP bar (and poise bar for armored enemies) over each recently hit monster.
+        private void DrawEnemyBars(float s)
+        {
+            var feel = VelaSettings.Feel;
+            var cam = Camera.main;
+            if (!feel.showEnemyHealthBars || cam == null) return;
+
+            foreach (var enemy in CombatRegistry.Enemies)
+            {
+                if (enemy == null || !enemy.IsAlive || enemy.Config == null) continue;
+                if (enemy.GetComponent<BossController>() != null) continue;
+
+                var age = Time.time - enemy.LastHitTime;
+                if (age > feel.enemyBarLinger) continue;
+
+                var height = enemy.Config.visual.worldHeight + enemy.Config.visual.hoverHeight + 0.35f;
+                var screen = cam.WorldToScreenPoint(enemy.transform.position + Vector3.up * height);
+                if (screen.z < 0f) continue;
+
+                var alpha = Mathf.Clamp01((feel.enemyBarLinger - age) / 0.4f);
+                var w = Mathf.Clamp(enemy.Config.colliderRadius * 110f, 50f, 110f) * s;
+                var r = new Rect(screen.x - w * 0.5f, Screen.height - screen.y, w, 6f * s);
+
+                Fill(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(0f, 0f, 0f, 0.7f * alpha));
+                Fill(r, new Color(1f, 1f, 1f, 0.12f * alpha));
+                Fill(new Rect(r.x, r.y, r.width * enemy.Health.Normalized, r.height),
+                    new Color(0.9f, 0.25f, 0.25f, alpha));
+
+                if (enemy.Config.poise > 0f)
+                {
+                    var p = new Rect(r.x, r.yMax + 3f * s, r.width, 3f * s);
+                    Fill(p, new Color(1f, 1f, 1f, 0.1f * alpha));
+                    var poiseColor = enemy.IsStaggered ? Color.white : feel.breakColor;
+                    var poise = enemy.IsStaggered ? 1f : enemy.PoiseNormalized;
+                    Fill(new Rect(p.x, p.y, p.width * poise, p.height), new Color(poiseColor.r, poiseColor.g, poiseColor.b, alpha));
+                }
+            }
+        }
+
+        private void DrawCombo(float s)
+        {
+            var feel = VelaSettings.Feel;
+            if (!feel.showComboCounter || !ComboTracker.IsActive || ComboTracker.Count < feel.comboMinimum) return;
+
+            var popAge = Time.unscaledTime - ComboTracker.PopTime;
+            var pop = popAge < 0.12f ? Mathf.Lerp(1.5f, 1f, popAge / 0.12f) : 1f;
+            var count = ComboTracker.Count;
+            var color = count >= 30 ? new Color(1f, 0.45f, 0.3f) : count >= 15 ? feel.critColor : Color.white;
+
+            var right = Screen.width - 40f * s;
+            var y = Screen.height * 0.32f;
+            comboStyle.fontSize = Mathf.RoundToInt(64f * s * pop);
+            var shadow = new Rect(right - 400f * s + 3f, y + 3f, 400f * s, 80f * s);
+            var previous = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.7f);
+            GUI.Label(shadow, count.ToString(), comboStyle);
+            GUI.color = color;
+            GUI.Label(new Rect(right - 400f * s, y, 400f * s, 80f * s), count.ToString(), comboStyle);
+
+            comboStyle.fontSize = Mathf.RoundToInt(20f * s);
+            GUI.color = new Color(1f, 1f, 1f, 0.9f);
+            GUI.Label(new Rect(right - 400f * s, y + 62f * s, 400f * s, 30f * s), "HITS", comboStyle);
+            GUI.color = previous;
+
+            var bar = new Rect(right - 120f * s, y + 92f * s, 120f * s, 4f * s);
+            Fill(bar, new Color(1f, 1f, 1f, 0.15f));
+            Fill(new Rect(bar.xMax - bar.width * ComboTracker.TimeLeftNormalized, bar.y,
+                bar.width * ComboTracker.TimeLeftNormalized, bar.height), color);
         }
 
         private void DrawPlayer(float s)
@@ -122,46 +253,180 @@ namespace Vela.UI
             var manager = CombatGameManager.Instance;
             if (manager != null)
             {
-                var line = $"Kills: {manager.Kills}";
+                var inventory = player.GetComponent<PlayerInventory>();
+                var gold = inventory != null ? inventory.Inventory.Gold : 0;
+                var line = $"Gold: {gold}    Kills: {manager.Kills}";
+                if (player.CounterActive) line += "    COUNTER!";
                 if (manager.GodMode) line += "    GOD MODE";
                 GUI.Label(new Rect(rect.x, dashRect.yMax + 8f * s, 400f * s, 26f * s), line, small);
             }
         }
 
-        private void DrawWeapons(float s)
+        /// Bottom center: skills 1–4 with cooldowns, mouse-button badges, weapon (Tab).
+        private void DrawSkillBar(float s)
         {
-            if (combat == null || combat.Weapons.Count == 0) return;
+            if (combat == null) return;
 
-            var count = combat.Weapons.Count;
-            var w = 150f * s;
-            var gap = 10f * s;
-            var total = count * w + (count - 1) * gap;
+            var slots = PlayerCombat.SkillSlots;
+            var cell = 64f * s;
+            var gap = 8f * s;
+            var total = slots * cell + (slots - 1) * gap;
             var x = (Screen.width - total) * 0.5f;
-            var y = Screen.height - 70f * s;
+            var y = Screen.height - cell - 26f * s;
 
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < slots; i++)
             {
-                var weapon = combat.Weapons[i];
-                var r = new Rect(x + i * (w + gap), y, w, 44f * s);
-                var selected = i == combat.WeaponIndex;
-                Fill(r, selected ? new Color(weapon.uiColor.r, weapon.uiColor.g, weapon.uiColor.b, 0.55f) : Back);
-                if (selected) Fill(new Rect(r.x, r.yMax - 4f * s, r.width, 4f * s), weapon.uiColor);
+                var skill = i < combat.Skills.Count ? combat.Skills[i] : null;
+                var r = new Rect(x + i * (cell + gap), y, cell, cell);
+                Fill(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Back);
 
-                if (weapon.icon != null)
+                if (skill != null)
                 {
-                    var iconRect = new Rect(r.x + 6f * s, r.y + 6f * s, 32f * s, 32f * s);
-                    GUI.DrawTexture(iconRect, weapon.icon.texture, ScaleMode.ScaleToFit);
+                    Fill(r, new Color(skill.color.r, skill.color.g, skill.color.b, 0.35f));
+                    var initials = skill.displayName.Length > 0 ? skill.displayName.Substring(0, 1) : "?";
+                    var big = new GUIStyle(center) { fontSize = Mathf.RoundToInt(26 * s) };
+                    GUI.Label(r, initials, big);
+
+                    var cd = combat.SkillCooldownNormalized(i);
+                    if (cd > 0f)
+                    {
+                        Fill(new Rect(r.x, r.y, r.width, r.height * cd), new Color(0f, 0f, 0f, 0.65f));
+                        GUI.Label(r, combat.SkillCooldownRemaining(i).ToString("0.0"), new GUIStyle(center) { fontSize = Mathf.RoundToInt(18 * s) });
+                    }
+
+                    var nameStyle = new GUIStyle(small) { alignment = TextAnchor.UpperCenter, fontSize = Mathf.RoundToInt(12 * s) };
+                    GUI.Label(new Rect(r.x - 10f * s, r.yMax + 2f * s, r.width + 20f * s, 20f * s), skill.displayName, nameStyle);
+                }
+                else
+                {
+                    Fill(r, Empty);
                 }
 
-                GUI.Label(new Rect(r.x + 10f * s, r.y + 8f * s, r.width, r.height), $"{i + 1}  {weapon.displayName}", label);
+                GUI.Label(new Rect(r.x + 4f * s, r.y + 2f * s, 20f * s, 20f * s), (i + 1).ToString(), small);
+                DrawMouseBadge(r, i, s);
             }
 
-            var current = combat.CurrentWeapon;
-            if (current != null && current.combo.Length > 1)
+            // Weapon + basic/charged bindings to the left of the bar.
+            var weapon = combat.CurrentWeapon;
+            if (weapon != null)
             {
-                var hint = $"Combo {combat.ComboIndex + 1}/{current.combo.Length}";
-                GUI.Label(new Rect(x, y - 28f * s, 300f * s, 26f * s), hint, small);
+                var wr = new Rect(x - 230f * s, y, 210f * s, cell);
+                Fill(wr, Back);
+                Fill(new Rect(wr.x, wr.yMax - 3f * s, wr.width, 3f * s), weapon.uiColor);
+                GUI.Label(new Rect(wr.x + 10f * s, wr.y + 6f * s, wr.width, 24f * s), weapon.displayName, label);
+                GUI.Label(new Rect(wr.x + 10f * s, wr.y + 32f * s, wr.width, 24f * s),
+                    $"J attack · K charge · Tab swap", small);
+
+                if (weapon.combo.Length > 1 && combat.IsBusy)
+                {
+                    GUI.Label(new Rect(wr.x, wr.y - 24f * s, wr.width, 22f * s), $"Combo {combat.ComboIndex + 1}/{weapon.combo.Length}", small);
+                }
             }
+
+            var mouse = $"LMB: {InventoryUI.ActionName(combat.LeftMouse, combat)}    RMB: {InventoryUI.ActionName(combat.RightMouse, combat)}";
+            GUI.Label(new Rect(x + total + 20f * s, y + 8f * s, 420f * s, 24f * s), mouse, small);
+            GUI.Label(new Rect(x + total + 20f * s, y + 32f * s, 420f * s, 24f * s), "Change in inventory (I)", small);
+        }
+
+        private void DrawMouseBadge(Rect slot, int index, float s)
+        {
+            var badge = "";
+            if (combat.LeftMouse == MouseAction.Skill1 + index) badge = "LMB";
+            if (combat.RightMouse == MouseAction.Skill1 + index) badge = badge.Length > 0 ? "L+R" : "RMB";
+            if (badge.Length == 0) return;
+            var r = new Rect(slot.xMax - 36f * s, slot.y + 2f * s, 34f * s, 18f * s);
+            Fill(r, new Color(1f, 0.85f, 0.3f, 0.85f));
+            GUI.Label(r, badge, new GUIStyle(center) { fontSize = Mathf.RoundToInt(11 * s), normal = { textColor = Color.black } });
+        }
+
+        private void DrawMessages(float s)
+        {
+            HudMessages.Prune();
+            var list = HudMessages.Active;
+            var y = Screen.height - 150f * s;
+            var style = new GUIStyle(center) { fontSize = Mathf.RoundToInt(20 * s) };
+            for (var i = list.Count - 1; i >= 0; i--)
+            {
+                var m = list[i];
+                var age = Time.unscaledTime - m.Time;
+                var alpha = age > m.Duration - 0.4f ? Mathf.Clamp01((m.Duration - age) / 0.4f) : 1f;
+                var pop = age < 0.1f ? Mathf.Lerp(1.25f, 1f, age / 0.1f) : 1f;
+                style.fontSize = Mathf.RoundToInt(20 * s * pop);
+                var r = new Rect(0f, y, Screen.width, 30f * s);
+                var previous = GUI.color;
+                GUI.color = new Color(0f, 0f, 0f, 0.8f * alpha);
+                GUI.Label(new Rect(r.x + 2f, r.y + 2f, r.width, r.height), m.Text, style);
+                GUI.color = new Color(m.Color.r, m.Color.g, m.Color.b, alpha);
+                GUI.Label(r, m.Text, style);
+                GUI.color = previous;
+                y -= 30f * s;
+            }
+        }
+
+        /// Names over dropped items: the hovered one, plus Rare+ items near the player.
+        private void DrawItemLabels(float s)
+        {
+            var cam = Camera.main;
+            var player = CombatRegistry.Player;
+            if (cam == null || player == null) return;
+
+            var pickup = player.GetComponent<ItemPickupController>();
+            var hovered = pickup != null ? pickup.Hovered : null;
+            var style = new GUIStyle(center) { fontSize = Mathf.RoundToInt(15 * s) };
+
+            foreach (var item in WorldItem.All)
+            {
+                if (item == null || item.IsGold || !item.CanPickUp) continue;
+                var near = (item.transform.position - player.transform.position).sqrMagnitude < 64f;
+                var show = item == hovered || (near && item.Rarity >= Rarity.Rare);
+                if (!show) continue;
+
+                var screen = cam.WorldToScreenPoint(item.LabelAnchor + Vector3.up * 0.5f);
+                if (screen.z < 0f) continue;
+
+                var text = item.Label;
+                var size = style.CalcSize(new GUIContent(text));
+                var r = new Rect(screen.x - size.x * 0.5f - 6f * s, Screen.height - screen.y - size.y, size.x + 12f * s, size.y + 2f * s);
+                Fill(r, new Color(0f, 0f, 0f, item == hovered ? 0.8f : 0.55f));
+                var previous = GUI.color;
+                GUI.color = item.LabelColor;
+                GUI.Label(r, text, style);
+                GUI.color = previous;
+
+                if (item == hovered)
+                {
+                    var hint = new GUIStyle(small) { alignment = TextAnchor.UpperCenter };
+                    GUI.Label(new Rect(r.x - 40f * s, r.yMax, r.width + 80f * s, 20f * s), "Click / F to pick up", hint);
+                }
+            }
+        }
+
+        /// Locked target: name + HP under the top of the screen (the boss has its own bar).
+        private void DrawTargetFrame(float s)
+        {
+            var player = CombatRegistry.Player;
+            var targeting = player != null ? player.GetComponent<PlayerTargeting>() : null;
+            var target = targeting != null ? targeting.Target : null;
+            if (target == null || target.Config == null || target.GetComponent<BossController>() != null) return;
+
+            var w = 320f * s;
+            var r = new Rect((Screen.width - w) * 0.5f, 110f * s, w, 12f * s);
+            GUI.Label(new Rect(r.x, r.y - 26f * s, w, 24f * s), $"Target: {target.Config.displayName}", label);
+            Bar(r, target.Health.Normalized, target.Health.Normalized, new Color(0.9f, 0.3f, 0.25f));
+            GUI.Label(new Rect(r.x, r.yMax + 2f * s, w, 20f * s), "Q release · E next target", small);
+        }
+
+        private void DrawJumpPrompt(float s)
+        {
+            var player = CombatRegistry.Player;
+            var cam = Camera.main;
+            if (player == null || cam == null || player.IsJumping || !JumpLink.PlayerNearAny(player.transform.position)) return;
+
+            var screen = cam.WorldToScreenPoint(player.transform.position + Vector3.up * 2.6f);
+            if (screen.z < 0f) return;
+            var r = new Rect(screen.x - 90f * s, Screen.height - screen.y - 16f * s, 180f * s, 26f * s);
+            Fill(r, new Color(0f, 0f, 0f, 0.6f));
+            GUI.Label(r, "Space: Jump across", new GUIStyle(center) { fontSize = Mathf.RoundToInt(15 * s) });
         }
 
         private void DrawCharge(float s)
@@ -222,10 +487,15 @@ namespace Vela.UI
             if (manager == null || !manager.ShowHelp) return;
 
             const string text =
-                "WASD move   ·   Mouse aim   ·   LMB attack / combo   ·   hold RMB charge, release when full\n" +
-                "Space / Shift dash (i-frames)   ·   1 Sword  2 Bow  3 Greatsword  (Tab cycles)   ·   Mouse wheel / +/- zoom\n" +
-                "T respawn monsters   ·   B go to boss   ·   G god mode   ·   R restart   ·   H / F1 hide help";
-            var r = new Rect(24f * s, Screen.height - 170f * s, Screen.width - 48f * s, 90f * s);
+                "WASD move · Space dash (near a marked edge: jump)\n" +
+                "J / LMB attack · hold K / RMB charge · 1–4 skills\n" +
+                "Q lock-on (or click a monster) · E next target\n" +
+                "Click item / F pick up · gold: walk over it\n" +
+                "I inventory · Tab weapon · wheel zoom\n" +
+                "O random outfit · F5 test loot · T respawn · B boss\n" +
+                "F6 animation A/B · F7 sword look · F3 anim debug\n" +
+                "G god mode · R restart · H hide help";
+            var r = new Rect(24f * s, 150f * s, 460f * s, 200f * s);
             GUI.Label(r, text, small);
         }
 

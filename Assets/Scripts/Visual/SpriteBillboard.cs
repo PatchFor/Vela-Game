@@ -4,6 +4,14 @@ using Vela.Gameplay;
 
 namespace Vela.Visual
 {
+    /// Four-way facing relative to the camera. Left is Side mirrored.
+    public enum Direction4
+    {
+        Down,
+        Up,
+        Side
+    }
+
     public enum VisualState
     {
         Idle,
@@ -15,8 +23,13 @@ namespace Vela.Visual
     /// 2.5D look: a flat sprite standing on a 3D floor, turned to face the locked camera,
     /// with a blob shadow and procedural bob/squash so single-frame art still feels alive.
     /// Put it on the character root (pivot at the feet); it builds its own children.
-    public class SpriteBillboard : MonoBehaviour
+    public class SpriteBillboard : MonoBehaviour, Vela.Core.IHitPausable
     {
+        // Per-sprite bob offset so hovering monsters don't bob in sync (no GetInstanceID: deprecated in 6.4+).
+        private static int hoverCounter;
+        private float hoverPhase = -1f;
+        private float HoverPhase => hoverPhase >= 0f ? hoverPhase : (hoverPhase = (++hoverCounter * 2.399f) % 6.283f);
+
         [SerializeField] private CharacterVisual visual = new CharacterVisual();
 
         [Tooltip("0 = sprite stands straight up, 1 = sprite fully faces the camera.")]
@@ -33,6 +46,14 @@ namespace Vela.Visual
         private Color flashColor = Color.white;
         private Color stateTint = Color.white;
         private Color baseTint = Color.white;
+        private Color hurtTint = Color.white;
+        private float hurtTintUntil;
+        private float hurtTintDuration = 0.1f;
+        private float trembleUntil;
+        private float trembleAmount;
+        private float trembleDuration = 0.1f;
+        private bool blinking;
+        private float blinkRate = 16f;
         private float scaleMultiplier = 1f;
         private bool facingLeft;
         private float fade = 1f;
@@ -41,9 +62,42 @@ namespace Vela.Visual
         private Vector2 squash = Vector2.one;
         private Vector2 squashVelocity;
 
+        private float airHeight;
+        private float pausedUntil;
+
+        // Pixel outline (hovered monster): four copies of the sprite in a solid color, nudged one
+        // art pixel up/down/left/right and pushed just behind it, so only the rim shows.
+        private static readonly Vector2[] OutlineOffsets = { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+        private SpriteRenderer[] outline;
+        private bool outlineOn;
+        private Color outlineColor = Color.red;
+        private float outlineWidth = 1f;
+
+        /// Hold the current pose (squash, animation frame) for a local hit-stop.
+        public void HitPause(float seconds) => pausedUntil = Mathf.Max(pausedUntil, Time.unscaledTime + seconds);
+
         public SpriteRenderer Renderer => spriteRenderer;
+        public VisualState State => state;
+        /// True while a local hit-stop holds the pose.
+        public bool IsPaused => Time.unscaledTime < pausedUntil;
+
+        /// Height (in sprite units) that is scaled to worldHeight. 0 = the sprite's own height.
+        /// Big animation canvases set it to the character's height so the swing room around the
+        /// character doesn't shrink it.
+        public float ReferenceHeightUnits { get; set; }
         public CharacterVisual Visual => visual;
         public bool FacingLeft => facingLeft;
+        public Transform SpriteRoot => spriteRoot;
+
+        /// Facing relative to the camera (Down = toward the camera, Up = away).
+        public Direction4 Direction { get; private set; } = Direction4.Down;
+
+        /// Set by PaperDoll: returns the body sprite for a direction. When set, the sprite only
+        /// mirrors in Side view, and Up/Down use their own art.
+        public System.Func<Direction4, Sprite> DirectionalSprite { get; set; }
+
+        /// Lifts the sprite (not the shadow) off the ground, e.g. during a jump.
+        public void SetAirHeight(float height) => airHeight = Mathf.Max(0f, height);
 
         private void Awake()
         {
@@ -72,13 +126,45 @@ namespace Vela.Visual
             if (cam == null) return;
 
             var side = Vector3.Dot(worldDirection, cam.transform.right);
+            var camForward = cam.transform.forward;
+            camForward.y = 0f;
+            var forward = Vector3.Dot(worldDirection, camForward.normalized);
+
             if (Mathf.Abs(side) > 0.15f) facingLeft = side < 0f;
+
+            // Slight bias toward Side so diagonals read as profile, like most 4-way pixel games.
+            if (Mathf.Abs(side) >= Mathf.Abs(forward) * 0.85f) Direction = Direction4.Side;
+            else Direction = forward > 0f ? Direction4.Up : Direction4.Down;
         }
 
         public void Flash(Color color, float duration)
         {
             flashColor = color;
             flashUntil = Time.time + duration;
+        }
+
+        /// After a flash, fade from `tint` back to normal over `duration` (starts when the flash ends).
+        public void HurtTint(Color tint, float duration)
+        {
+            hurtTint = tint;
+            hurtTintDuration = Mathf.Max(0.01f, duration);
+            hurtTintUntil = Mathf.Max(flashUntil, Time.time) + duration;
+        }
+
+        /// Sideways jitter in real time, so the victim visibly trembles during a freeze-frame.
+        public void Tremble(float amount, float duration)
+        {
+            if (amount <= 0f || duration <= 0f) return;
+            trembleAmount = Mathf.Max(amount, Time.unscaledTime < trembleUntil ? trembleAmount : 0f);
+            trembleDuration = duration;
+            trembleUntil = Time.unscaledTime + duration;
+        }
+
+        /// Blink the sprite (i-frames after the player is hit).
+        public void SetBlink(bool on, float rate)
+        {
+            blinking = on;
+            blinkRate = rate;
         }
 
         /// Kick the squash spring: (1.3, 0.7) = squashed flat, (0.8, 1.25) = stretched tall.
@@ -97,6 +183,14 @@ namespace Vela.Visual
         public void SetScaleMultiplier(float scale) => scaleMultiplier = Mathf.Max(0.05f, scale);
 
         public void SetFade(float alpha) => fade = Mathf.Clamp01(alpha);
+
+        /// Solid-color rim around the sprite, `widthPixels` art pixels thick (hover highlight).
+        public void SetOutline(bool on, Color color, float widthPixels = 1f)
+        {
+            outlineOn = on;
+            outlineColor = color;
+            outlineWidth = Mathf.Max(0.25f, widthPixels);
+        }
 
         private void EnsureBuilt()
         {
@@ -172,6 +266,12 @@ namespace Vela.Visual
                 _ => visual.idleFrames
             };
 
+            if (DirectionalSprite != null)
+            {
+                var directional = DirectionalSprite(Direction);
+                if (directional != null) return directional;
+            }
+
             if (frames == null || frames.Length == 0) frames = visual.idleFrames;
             if (frames == null || frames.Length == 0) return visual.sprite;
 
@@ -183,15 +283,24 @@ namespace Vela.Visual
         {
             if (spriteRenderer == null) return;
 
-            stateTime += Time.deltaTime;
+            var paused = Time.unscaledTime < pausedUntil;
+            var dt = paused ? 0f : Time.deltaTime;
+            stateTime += dt;
             ApplySprite(CurrentFrame());
 
-            // Squash spring back toward 1.
+            // Squash spring back toward 1, sub-stepped: one big step during a frame hitch
+            // (or on a slow PC) makes the spring explode and the sprite fill the screen.
             const float stiffness = 320f;
             const float damping = 18f;
-            var accel = (Vector2.one - squash) * stiffness - squashVelocity * damping;
-            squashVelocity += accel * Time.deltaTime;
-            squash += squashVelocity * Time.deltaTime;
+            const float maxStep = 1f / 120f;
+            for (var left = dt; left > 0f; left -= maxStep)
+            {
+                var h = Mathf.Min(left, maxStep);
+                var accel = (Vector2.one - squash) * stiffness - squashVelocity * damping;
+                squashVelocity += accel * h;
+                squash += squashVelocity * h;
+            }
+            squash = Vector2.Max(new Vector2(0.4f, 0.4f), Vector2.Min(new Vector2(1.8f, 1.8f), squash));
 
             // Procedural motion for single-frame art.
             var bob = 0f;
@@ -214,7 +323,8 @@ namespace Vela.Visual
             if (sprite != null)
             {
                 var bounds = sprite.bounds;
-                baseScale = visual.worldHeight * scaleMultiplier / Mathf.Max(0.001f, bounds.size.y);
+                var reference = ReferenceHeightUnits > 0f ? ReferenceHeightUnits : bounds.size.y;
+                baseScale = visual.worldHeight * scaleMultiplier / Mathf.Max(0.001f, reference);
                 feetOffset = -bounds.min.y * baseScale;
             }
 
@@ -230,17 +340,30 @@ namespace Vela.Visual
             var sy = baseScale * squash.y * breathe;
             spriteRoot.localScale = new Vector3(sx, sy, baseScale);
             spriteRoot.position = transform.position + spriteRoot.up * (feetOffset * squash.y * breathe)
-                                  + Vector3.up * (bob + Hover());
+                                  + Vector3.up * (bob + Hover() + airHeight) + TrembleOffset(cam);
 
-            spriteRenderer.flipX = visual.artFacesRight ? facingLeft : !facingLeft;
+            var mirror = DirectionalSprite == null || Direction == Direction4.Side;
+            spriteRenderer.flipX = mirror && (visual.artFacesRight ? facingLeft : !facingLeft);
 
             var flashing = Time.time < flashUntil;
             var wanted = flashing ? VelaSettings.FlashMaterial : VelaSettings.UnlitMaterial;
             if (spriteRenderer.sharedMaterial != wanted) spriteRenderer.sharedMaterial = wanted;
 
-            var color = flashing ? flashColor : visual.tint * baseTint * stateTint;
+            var color = visual.tint * baseTint * stateTint;
+            if (flashing)
+            {
+                color = flashColor;
+            }
+            else if (Time.time < hurtTintUntil)
+            {
+                var t = 1f - (hurtTintUntil - Time.time) / hurtTintDuration;
+                color = Color.Lerp(color * hurtTint, color, t * t);
+            }
+
             color.a *= fade;
+            if (blinking && Mathf.Repeat(Time.time * blinkRate, 1f) < 0.5f) color.a *= 0.25f;
             spriteRenderer.color = color;
+            UpdateOutline(baseScale);
 
             if (shadowMaterial != null)
             {
@@ -250,10 +373,65 @@ namespace Vela.Visual
             }
         }
 
+        private void UpdateOutline(float baseScale)
+        {
+            var sprite = spriteRenderer.sprite;
+            var show = outlineOn && sprite != null && fade > 0.01f;
+            if (!show)
+            {
+                if (outline != null) foreach (var r in outline) r.enabled = false;
+                return;
+            }
+
+            if (outline == null)
+            {
+                outline = new SpriteRenderer[OutlineOffsets.Length];
+                for (var i = 0; i < outline.Length; i++)
+                {
+                    var go = new GameObject("Outline");
+                    go.transform.SetParent(spriteRoot, false);
+                    var r = go.AddComponent<SpriteRenderer>();
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                    outline[i] = r;
+                }
+            }
+
+            // Offsets are in the sprite's local units (1 art pixel = 1 / pixelsPerUnit). The copies
+            // sit ~1 cm further from the camera so transparency sorting draws them first.
+            var pixel = outlineWidth / Mathf.Max(1f, sprite.pixelsPerUnit);
+            var behind = 0.01f / Mathf.Max(0.001f, baseScale);
+            var rim = outlineColor;
+            rim.a *= spriteRenderer.color.a;
+            for (var i = 0; i < outline.Length; i++)
+            {
+                var r = outline[i];
+                r.enabled = true;
+                r.sprite = sprite;
+                r.flipX = spriteRenderer.flipX;
+                r.sharedMaterial = VelaSettings.FlashMaterial;
+                r.color = rim;
+                r.sortingLayerID = spriteRenderer.sortingLayerID;
+                r.sortingOrder = spriteRenderer.sortingOrder;
+                var o = OutlineOffsets[i] * pixel;
+                r.transform.localPosition = new Vector3(o.x, o.y, behind);
+            }
+        }
+
+        private Vector3 TrembleOffset(Camera cam)
+        {
+            var now = Time.unscaledTime;
+            if (now >= trembleUntil || cam == null) return Vector3.zero;
+
+            var strength = (trembleUntil - now) / Mathf.Max(0.001f, trembleDuration);
+            var side = Mathf.Sign(Mathf.Sin(now * 110f));
+            return cam.transform.right * (side * trembleAmount * strength);
+        }
+
         private float Hover()
         {
             if (visual.hoverHeight <= 0f) return 0f;
-            return visual.hoverHeight + Mathf.Sin(Time.time * 5f + GetInstanceID()) * 0.12f;
+            return visual.hoverHeight + Mathf.Sin(Time.time * 5f + HoverPhase) * 0.12f;
         }
 
         private void OnDestroy()

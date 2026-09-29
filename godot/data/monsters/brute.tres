@@ -1,0 +1,143 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_5qfgt"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_7ynp5"]
+[ext_resource type="Resource" path="res://data/items/helm.tres" id="3_imadg"]
+[ext_resource type="Resource" path="res://data/items/plate.tres" id="4_4ars5"]
+[ext_resource type="Resource" path="res://data/items/greaves.tres" id="5_xqjpv"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="6_hv83o"]
+[ext_resource type="Script" path="res://scripts/config/loot_table.gd" id="7_qf2hd"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="8_ataqn"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="9_04mrm"]
+[ext_resource type="Texture2D" path="res://art/Brute.png" id="10_sbevy"]
+
+[sub_resource type="Resource" id="Resource_mufxk"]
+script = ExtResource("1_5qfgt")
+name = "Club Swing"
+kind = 0
+weight = 1.0
+min_range = 0.0
+max_range = 3.2
+cooldown = 2.0
+windup = 0.8
+active = 0.12
+recovery = 0.8
+track = true
+track_speed = 120.0
+damage = 22
+knockback = 14.0
+hit_weight = 3
+radius = 3.2
+arc = 140.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.3, 0.2, 0.5)
+
+[sub_resource type="Resource" id="Resource_nrxyp"]
+script = ExtResource("1_5qfgt")
+name = "Ground Slam"
+kind = 5
+weight = 0.6
+min_range = 0.0
+max_range = 3.5
+cooldown = 5.0
+windup = 1.1
+active = 0.1
+recovery = 1.1
+track = true
+track_speed = 240.0
+damage = 28
+knockback = 16.0
+hit_weight = 4
+radius = 4.0
+arc = 100.0
+dash_speed = 14.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.5, 0.2, 0.5)
+
+[sub_resource type="Resource" id="Resource_iqy08"]
+script = ExtResource("1_5qfgt")
+name = "Charge"
+kind = 2
+weight = 1.0
+min_range = 5.0
+max_range = 12.0
+cooldown = 6.0
+windup = 0.9
+active = 0.9
+recovery = 0.9
+track = true
+track_speed = 90.0
+damage = 25
+knockback = 16.0
+hit_weight = 3
+radius = 1.2
+arc = 100.0
+dash_speed = 15.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(1, 0.2, 0.2, 0.45)
+
+[sub_resource type="Resource" id="Resource_shqsr"]
+script = ExtResource("7_qf2hd")
+gold_chance = 1.0
+gold_min = 10
+gold_max = 20
+guaranteed = Array[ExtResource("2_7ynp5")]([])
+rolls = 2
+nothing_weight = 0.8
+items = Array[ExtResource("2_7ynp5")]([ExtResource("3_imadg"), ExtResource("4_4ars5"), ExtResource("5_xqjpv"), ExtResource("6_hv83o")])
+weights = PackedFloat32Array(1.2, 1.2, 1, 1.5)
+
+[resource]
+script = ExtResource("9_04mrm")
+display_name = "Stone Brute"
+texture = ExtResource("10_sbevy")
+world_height = 2.6
+shadow_size = 1.9
+hover = 0.0
+max_hp = 220
+radius = 0.75
+height = 2.2
+poise = 60.0
+stagger_duration = 0.6
+knockback_resist = 0.7
+alert_radius = 7.0
+immortal = false
+death_color = Color(0.65, 0.5, 0.75, 1)
+movement = 0
+move_speed = 2.3
+detection = 10.0
+leash = 24.0
+preferred = 2.2
+erratic_interval = 0.5
+decision_delay = 0.6
+attacks = Array[ExtResource("1_5qfgt")]([SubResource("Resource_mufxk"), SubResource("Resource_nrxyp"), SubResource("Resource_iqy08")])
+loot = SubResource("Resource_shqsr")
+phases = Array[ExtResource("8_ataqn")]([])

@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="MonsterConfig" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/config/enemy_attack.gd" id="1_1t65f"]
+[ext_resource type="Script" path="res://scripts/config/item_def.gd" id="2_r7d1w"]
+[ext_resource type="Resource" path="res://data/items/gel.tres" id="3_tgiak"]
+[ext_resource type="Resource" path="res://data/items/potion.tres" id="4_s0npo"]
+[ext_resource type="Resource" path="res://data/items/gloves.tres" id="5_0pdri"]
+[ext_resource type="Resource" path="res://data/items/boots.tres" id="6_85oup"]
+[ext_resource type="Script" path="res://scripts/config/loot_table.gd" id="7_wqojv"]
+[ext_resource type="Script" path="res://scripts/config/boss_phase.gd" id="8_rc0ip"]
+[ext_resource type="Script" path="res://scripts/config/monster_config.gd" id="9_3j15e"]
+[ext_resource type="Texture2D" path="res://art/Slime.png" id="10_25duq"]
+
+[sub_resource type="Resource" id="Resource_qndfw"]
+script = ExtResource("1_1t65f")
+name = "Hop Bite"
+kind = 1
+weight = 1.0
+min_range = 0.0
+max_range = 3.2
+cooldown = 1.6
+windup = 0.55
+active = 0.28
+recovery = 0.7
+track = true
+track_speed = 300.0
+damage = 10
+knockback = 6.0
+hit_weight = 2
+radius = 0.9
+arc = 100.0
+dash_speed = 10.0
+proj_count = 1
+spread = 0.0
+volleys = 1
+volley_interval = 0.15
+proj_speed = 10.0
+proj_range = 14.0
+proj_size = 0.3
+aoe_count = 1
+aoe_scatter = 0.0
+summon_count = 2
+color = Color(0.5, 1, 0.3, 0.55)
+
+[sub_resource type="Resource" id="Resource_7r5xf"]
+script = ExtResource("7_wqojv")
+gold_chance = 0.8
+gold_min = 1
+gold_max = 5
+guaranteed = Array[ExtResource("2_r7d1w")]([])
+rolls = 1
+nothing_weight = 1.2
+items = Array[ExtResource("2_r7d1w")]([ExtResource("3_tgiak"), ExtResource("4_s0npo"), ExtResource("5_0pdri"), ExtResource("6_85oup")])
+weights = PackedFloat32Array(3, 1, 0.35, 0.35)
+
+[resource]
+script = ExtResource("9_3j15e")
+display_name = "Green Slime"
+texture = ExtResource("10_25duq")
+world_height = 1.0
+shadow_size = 1.1
+hover = 0.0
+max_hp = 45
+radius = 0.45
+height = 1.0
+poise = 0.0
+stagger_duration = 0.3
+knockback_resist = 0.0
+alert_radius = 7.0
+immortal = false
+death_color = Color(0.5, 0.9, 0.3, 1)
+movement = 0
+move_speed = 3.2
+detection = 10.0
+leash = 24.0
+preferred = 1.8
+erratic_interval = 0.5
+decision_delay = 0.4
+attacks = Array[ExtResource("1_1t65f")]([SubResource("Resource_qndfw")])
+loot = SubResource("Resource_7r5xf")
+phases = Array[ExtResource("8_rc0ip")]([])
