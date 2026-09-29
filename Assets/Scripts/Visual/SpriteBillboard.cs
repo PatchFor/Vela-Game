@@ -77,6 +77,14 @@ namespace Vela.Visual
         public void HitPause(float seconds) => pausedUntil = Mathf.Max(pausedUntil, Time.unscaledTime + seconds);
 
         public SpriteRenderer Renderer => spriteRenderer;
+        public VisualState State => state;
+        /// True while a local hit-stop holds the pose.
+        public bool IsPaused => Time.unscaledTime < pausedUntil;
+
+        /// Height (in sprite units) that is scaled to worldHeight. 0 = the sprite's own height.
+        /// Big animation canvases set it to the character's height so the swing room around the
+        /// character doesn't shrink it.
+        public float ReferenceHeightUnits { get; set; }
         public CharacterVisual Visual => visual;
         public bool FacingLeft => facingLeft;
         public Transform SpriteRoot => spriteRoot;
@@ -315,7 +323,8 @@ namespace Vela.Visual
             if (sprite != null)
             {
                 var bounds = sprite.bounds;
-                baseScale = visual.worldHeight * scaleMultiplier / Mathf.Max(0.001f, bounds.size.y);
+                var reference = ReferenceHeightUnits > 0f ? ReferenceHeightUnits : bounds.size.y;
+                baseScale = visual.worldHeight * scaleMultiplier / Mathf.Max(0.001f, reference);
                 feetOffset = -bounds.min.y * baseScale;
             }
 

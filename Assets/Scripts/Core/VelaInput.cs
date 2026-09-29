@@ -152,6 +152,9 @@ namespace Vela.Core
         public static bool HelpPressed => Down(Key.F1) || Down(Key.H);
         public static bool DebugLootPressed => Down(Key.F5);
         public static bool DebugOutfitPressed => Down(Key.O);
+        public static bool DebugAnimationOverlayPressed => Down(Key.F3);
+        public static bool DebugAnimationDetailPressed => Down(Key.F6);
+        public static bool DebugWeaponSkinPressed => Down(Key.F7);
         public static bool CancelPressed => Down(Key.Escape);
 
         public static bool SkillPressed(int index) => index switch
@@ -179,6 +182,9 @@ namespace Vela.Core
         public static bool HelpPressed => Down(KeyCode.F1) || Down(KeyCode.H);
         public static bool DebugLootPressed => Down(KeyCode.F5);
         public static bool DebugOutfitPressed => Down(KeyCode.O);
+        public static bool DebugAnimationOverlayPressed => Down(KeyCode.F3);
+        public static bool DebugAnimationDetailPressed => Down(KeyCode.F6);
+        public static bool DebugWeaponSkinPressed => Down(KeyCode.F7);
         public static bool CancelPressed => Down(KeyCode.Escape);
 
         public static bool SkillPressed(int index) => index switch

@@ -86,6 +86,10 @@ namespace Vela.Player
         /// True while any part of an attack (or a charge) is running.
         public bool IsBusy => phase != Phase.Idle;
 
+        /// The step being swung (windup / active / recovery), else null. For debug overlays.
+        public AttackStep CurrentStep => phase == Phase.Windup || phase == Phase.Active || phase == Phase.Recovery ? step : null;
+        public Vector3 AttackDirection => attackDirection;
+
         public bool IsCharging => phase == Phase.Charging;
 
         public float ChargeNormalized =>
@@ -496,6 +500,8 @@ namespace Vela.Player
             swingFlip = !swingFlip;
 
             if (player.Billboard != null) player.Billboard.Punch(new Vector2(0.85f, 1.15f));
+            // The drawn animation stretches its parts to this step's timing.
+            if (paperDoll != null) paperDoll.PlayAttack(step.animation, step.windup, step.active, step.recovery);
             if (phaseTimer <= 0f) BeginActive();
         }
 
@@ -623,6 +629,7 @@ namespace Vela.Player
             if (phase != Phase.Idle && phase != Phase.Charging) lastStepEndedAt = Time.time;
             phase = Phase.Idle;
             phaseTimer = 0f;
+            if (paperDoll != null) paperDoll.StopAttack();
             ReleaseChargeRing();
             if (player != null && player.Billboard != null) player.Billboard.SetTint(Color.white);
             if (resetCombo) comboIndex = 0;

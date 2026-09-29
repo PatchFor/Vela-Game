@@ -35,6 +35,7 @@ namespace Vela.EditorTools
             public Items.LootConfig Loot;
             public Items.LootTable DebugLoot;
             public Items.ItemDefinition[] Wardrobe;
+            public Visual.EquipmentVisual[] SwordSkins;
             public Audio.SfxLibrary Sfx;
         }
 

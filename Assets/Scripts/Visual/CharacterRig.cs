@@ -13,7 +13,8 @@ namespace Vela.Visual
         Chest,
         Hands,
         Head,
-        Weapon
+        Weapon,
+        Smear
     }
 
     /// Base body + hair for a layered (paper-doll) character, and the draw order of every
@@ -31,6 +32,14 @@ namespace Vela.Visual
         public DirectionalSprites body = new DirectionalSprites();
         public DirectionalSprites hair = new DirectionalSprites();
         public Color hairTint = Color.white;
+
+        [Header("Animated doll (64×64 frames)")]
+        [Tooltip("When set, the character plays these animations and equipment uses its animated art. Empty = the single-frame layers above.")]
+        public DollAnimationSet animationSet;
+        [Tooltip("A/B test: Full = every drawn frame, KeyPoses = one pose per attack phase, Procedural = old single frame + code squash. F6 cycles it in play mode.")]
+        public AnimationDetail detail = AnimationDetail.Full;
+        [Tooltip("Color of the motion smear drawn on Smear frames.")]
+        public Color smearColor = new Color(0.85f, 0.95f, 1f, 0.8f);
 
         [Header("Draw order per facing (back → front)")]
         public LayerOrder down = new LayerOrder

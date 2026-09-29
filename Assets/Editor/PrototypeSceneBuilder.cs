@@ -33,7 +33,7 @@ namespace Vela.EditorTools
 
         /// Bump when the generated scene changes. PlayModeBootstrap offers a rebuild when the
         /// saved scene is older than this.
-        public const int SceneVersion = 3;
+        public const int SceneVersion = 4;
         public const string VersionFile = "Assets/Scenes/.combat_scene_version";
 
         [MenuItem("Vela/Build Combat Prototype Scene", priority = 0)]
@@ -493,6 +493,8 @@ namespace Vela.EditorTools
             player.AddComponent<PlayerTargeting>();
             player.AddComponent<ItemPickupController>();
             player.AddComponent<PlayerCombat>();
+            player.AddComponent<AnimationTestbench>().Configure(configs.SwordSkins);
+            player.AddComponent<DollDebugOverlay>();
             return player;
         }
 

@@ -19,6 +19,8 @@ namespace Vela.Config
     {
         public string name = "Slash";
         public AttackKind kind = AttackKind.MeleeArc;
+        [Tooltip("Clip in the character's animation set (e.g. slash, backslash, thrust). Its drawn parts stretch to this step's windup / active / recovery. Empty = the set's fallback attack.")]
+        public string animation = "";
 
         [Header("Damage")]
         public int damage = 10;

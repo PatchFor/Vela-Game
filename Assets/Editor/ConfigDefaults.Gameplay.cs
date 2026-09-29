@@ -43,6 +43,17 @@ namespace Vela.EditorTools
             FillWeaponVisual(set.Bow, bowVisual);
             FillWeaponVisual(set.Greatsword, greatswordVisual);
 
+            // ---------------- 64×64 animated doll (sword animation test)
+            set.SwordSkins = BuildAnimatedDoll(rig, new AnimatedGear
+            {
+                Hood = hood, Helm = helm, Crown = crown,
+                Vest = vest, Plate = plate, WardenPlate = wardenPlate,
+                Gloves = gloves, EmberGloves = emberGloves,
+                Boots = boots, Greaves = greaves,
+                Sword = swordVisual, Bow = bowVisual, Greatsword = greatswordVisual
+            });
+            FillSwordAnimations(set.Sword);
+
             // ---------------- items
             var gold = Item("Gold", "Gold", PlaceholderArt.GoldIcon(), Rarity.Common, ItemCategory.Currency, 9999, 0, null, "Walk over it to collect.");
             var potion = Item("HealthPotion", "Health Potion", PlaceholderArt.PotionIcon(), Rarity.Common, ItemCategory.Consumable, 10, 40, null, "Right-click to drink.");

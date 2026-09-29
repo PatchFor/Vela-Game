@@ -493,8 +493,9 @@ namespace Vela.UI
                 "Click item / F pick up · gold: walk over it\n" +
                 "I inventory · Tab weapon · wheel zoom\n" +
                 "O random outfit · F5 test loot · T respawn · B boss\n" +
+                "F6 animation A/B · F7 sword look · F3 anim debug\n" +
                 "G god mode · R restart · H hide help";
-            var r = new Rect(24f * s, 150f * s, 460f * s, 180f * s);
+            var r = new Rect(24f * s, 150f * s, 460f * s, 200f * s);
             GUI.Label(r, text, small);
         }
 

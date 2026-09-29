@@ -36,9 +36,13 @@ speed without redrawing, and the impact frame always lands on the frame that dea
 
 | Config phase | Animation parts played in it |
 |---|---|
-| windup | windup (with the last pose held) |
-| active | smear → impact (held by hit-stop) |
+| windup | windup (last pose held via frame weight) → smear |
+| active | impact (held by hit-stop). Damage lands on its first frame. |
 | recovery | follow → recovery |
+
+Within a phase, each frame gets time in proportion to its **weight** (weight 3 = held three
+times as long). When windup is 0 (the charged Dash Strike), the smear frames play at the start
+of active instead.
 
 Sword numbers today, in frames at 60 fps (from `Assets/Config/Weapons/Sword.asset`):
 
@@ -102,7 +106,8 @@ The director rates the "weight" of each. That rating decides how many frames the
 ## Edge cases (tests)
 
 - Every layer of a state has the same frame count as the body (the importer rejects mismatches).
-- Every attack has all five phase tags; phase ranges don't overlap and cover every frame.
+- Every attack has an Impact frame, and its parts never go backwards (Windup → Smear → Impact → Follow → Recovery).
+  Windup and Smear may be missing (Dash Strike has no windup).
 - Stretched timing: the impact part starts exactly at the config's active start (±1 frame at 60 fps).
 - Swapping a hat, weapon or shirt mid-attack keeps the same frame index and doesn't restart the animation.
 - An empty slot (no hat) renders nothing and doesn't shift other layers.
@@ -110,13 +115,40 @@ The director rates the "weight" of each. That rating decides how many frames the
 - Marker layers never appear in game.
 - Weapon draw order follows the per-frame front/behind flag, not only the facing.
 
+## Status: week 1 built (placeholder)
+
+| Piece | Where |
+|---|---|
+| Data: clips, per-frame anchors + part + weight, layer sheets | `Scripts/Visual/Animation/DollAnimationTypes.cs`, `DollAnimationSet.cs` |
+| Phase stretching (pure, tested) | `Scripts/Visual/Animation/PhaseTimeline.cs` |
+| Art contract check | `Scripts/Visual/Animation/DollAnimationValidator.cs` |
+| Playback, anchors, per-frame weapon front/behind | `Scripts/Visual/PaperDoll.cs` (animated path; the old single-frame path is unchanged) |
+| Attack → clip | `AttackStep.animation` (sword: slash / backslash / thrust / dash_strike); PlayerCombat calls `PaperDoll.PlayAttack` |
+| Mannequin + garment sheets + anchored hats/swords | `Editor/PlaceholderArt.Mannequin.cs`, `Editor/ConfigDefaults.Animation.cs` → `Assets/Config/Characters/MannequinAnimation.asset`, atlases in `Assets/Art/Placeholder/Doll64/` |
+| A/B + sword looks | F6 / F7 (`Gameplay/AnimationTestbench.cs`) |
+| Debug overlay | F3 (`UI/DollDebugOverlay.cs`) |
+| Tests | `Tests/EditMode/DollAnimationTests.cs` |
+
+Preview of the generated frames, with a helm, vest, boots, gloves and the long sword.
+Rows are down / up / side for Slash, Thrust and Dash Strike. Yellow = windup, red = impact.
+
+![mannequin attacks](../images/animation/mannequin-attacks.png)
+
+Not yet built:
+- the Aseprite importer (week 2);
+- spike (B), the lookup texture;
+- hurt / dash clips per weapon.
+
 ## Tuning (director, not tests)
 
 | Asset | Field | What it changes |
 |---|---|---|
 | Sword.asset | windup / active / recovery per step | Attack speed. The animation stretches to fit. |
-| (new) sword animation set | hold frames on the windup pose | How heavy the anticipation feels |
-| (new) anchor asset | per-frame blade angle and offsets | Blade arc shape |
+| MannequinAnimation.asset | `clips → frames → weight` (e.g. the held windup frame) | How heavy the anticipation feels |
+| MannequinAnimation.asset | `clips → frames → hand / tip / head` | Blade arc shape, hat position |
+| MannequinAnimation.asset | `characterHeightPixels` (44) | Character size inside the 64×64 canvas |
+| PlayerRig.asset | `detail` (Full / KeyPoses / Procedural), `smearColor` | Default A/B mode, smear look |
+| *Equipment*Visual.asset | `anchorOffset` | Where a hat sits on the head |
 | CombatFeel.asset | hit-stop per weight | How long the impact frame freezes |
 
 ## Out of scope (this phase)

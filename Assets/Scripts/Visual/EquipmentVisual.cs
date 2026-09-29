@@ -36,5 +36,16 @@ namespace Vela.Visual
 
         [Tooltip("Hide the hair layer while worn (full helmets).")]
         public bool hidesHair;
+
+        [Header("Animated doll (used when the rig has an animation set)")]
+        [Tooltip("Hats and weapons: one sprite per facing, placed on every frame's anchor. Hats: pivot at the bottom center, sits on the head anchor. Weapons: art points right, pivot on the grip, sits in the hand and turns with the blade angle.")]
+        public DirectionalSprites anchored = new DirectionalSprites();
+        [Tooltip("Nudge from the anchor, in art pixels (e.g. a hood sits lower than a crown).")]
+        public Vector2 anchorOffset;
+        [Tooltip("Shirts, gloves, boots: one sprite per animation frame, same canvas and pivot as the body.")]
+        public DollLayerSheet frames = new DollLayerSheet();
+
+        /// True if this piece can be drawn on the animated doll.
+        public bool HasAnimatedArt => (anchored != null && !anchored.IsEmpty) || (frames != null && !frames.IsEmpty);
     }
 }

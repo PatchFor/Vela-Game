@@ -78,6 +78,9 @@ you bind to its buttons.
 | Mouse wheel, `+` / `-` | Zoom |
 | `O` | Random outfit (test the paper doll) |
 | `F5` | Drop test loot around you (test full inventory, rarity looks) |
+| `F6` | Sword animation A/B: C full frames + smear → B key poses → A old single frame |
+| `F7` | Swap the sword look (long / short / broad). Same animation, works mid-swing |
+| `F3` | Animation debug: anchor dots, windup/active/recovery bar with frame counts, hit arc |
 | `T` / `B` / `G` / `R` | Respawn monsters / go to the boss / god mode / restart |
 | `H` / `F1` | Show or hide the help text |
 
