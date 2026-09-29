@@ -17,6 +17,7 @@ fire bound actions.
 | Right mouse | Bindable (default: charged attack) |
 | Q / middle mouse | Lock on (hovered monster, else best in front) / release |
 | E | Next target |
+| Hover a monster | Red pixel outline around its sprite |
 | Click a monster | Lock it (and the click still attacks) |
 | Tab | Next weapon |
 
@@ -69,7 +70,8 @@ Every event plays through `Sfx.Play`. Placeholder sounds are generated until cli
 
 ## Tuning
 Weapons: `Assets/Config/Weapons/*` · Skills: `Assets/Config/Skills/*` · Feel: `CombatFeel.asset` ·
-Lock-on: `Player.asset` (lockOnRange 14, lockOnBreakRange 20, hoverRadiusPixels 60).
+Lock-on: `Player.asset` (lockOnRange 14, lockOnBreakRange 20, hoverRadiusPixels 60,
+hoverOutlineColor red, hoverOutlineWidth 1 art pixel — the rim on the monster under the mouse).
 
 ## Skills (defaults)
 | Skill | Type | Cooldown | Weight |

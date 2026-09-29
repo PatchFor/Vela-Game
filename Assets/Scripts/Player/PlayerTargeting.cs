@@ -5,11 +5,12 @@ using Vela.Core;
 using Vela.Enemies;
 using Vela.FX;
 using Vela.Gameplay;
+using Vela.Visual;
 
 namespace Vela.Player
 {
     /// Lock-on and pointer targeting.
-    ///  - Hover a monster with the mouse → faint ring (and click it to lock it).
+    ///  - Hover a monster with the mouse → red pixel outline (click it to lock it).
     ///  - Q (or middle mouse): lock the hovered monster, else the best one in front; again to release.
     ///  - E: switch to the next monster in range.
     ///  - While locked, attacks and facing go toward the target. The lock breaks when the target
@@ -20,12 +21,11 @@ namespace Vela.Player
     public class PlayerTargeting : MonoBehaviour
     {
         private static readonly Color LockColor = new Color(1f, 0.45f, 0.25f, 0.95f);
-        private static readonly Color HoverColor = new Color(1f, 1f, 1f, 0.45f);
 
         private PlayerController player;
         private PlayerInputReader input;
         private TargetReticle lockReticle;
-        private TargetReticle hoverReticle;
+        private SpriteBillboard outlined;
         private readonly List<EnemyBrain> candidates = new List<EnemyBrain>();
 
         public EnemyBrain Target { get; private set; }
@@ -42,13 +42,12 @@ namespace Vela.Player
         private void Start()
         {
             lockReticle = TargetReticle.Create("[LockReticle]");
-            hoverReticle = TargetReticle.Create("[HoverReticle]");
         }
 
         private void OnDestroy()
         {
             if (lockReticle != null) Destroy(lockReticle.gameObject);
-            if (hoverReticle != null) Destroy(hoverReticle.gameObject);
+            SetOutlined(null);
         }
 
         public void Lock(EnemyBrain enemy)
@@ -113,8 +112,15 @@ namespace Vela.Player
             if (Target != null) lockReticle.Show(Target.transform, Radius(Target), LockColor);
             else lockReticle.Hide();
 
-            if (Hovered != null && Hovered != Target) hoverReticle.Show(Hovered.transform, Radius(Hovered), HoverColor);
-            else hoverReticle.Hide();
+            SetOutlined(Hovered != null && Hovered.IsAlive ? Hovered.GetComponent<SpriteBillboard>() : null);
+        }
+
+        private void SetOutlined(SpriteBillboard next)
+        {
+            var config = player != null ? player.Config : null;
+            if (outlined != null && outlined != next) outlined.SetOutline(false, Color.clear);
+            outlined = next;
+            if (outlined != null && config != null) outlined.SetOutline(true, config.hoverOutlineColor, config.hoverOutlineWidth);
         }
 
         private static float Radius(EnemyBrain enemy) =>

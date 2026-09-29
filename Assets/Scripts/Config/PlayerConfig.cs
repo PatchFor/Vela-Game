@@ -74,6 +74,10 @@ namespace Vela.Config
         public float lockOnBreakRange = 20f;
         [Tooltip("Screen-space radius (px at 1080p) for hovering a monster with the mouse.")]
         public float hoverRadiusPixels = 60f;
+        [Tooltip("Rim drawn around the monster under the mouse, so you know what a click will target.")]
+        public Color hoverOutlineColor = new Color(1f, 0.15f, 0.1f, 1f);
+        [Tooltip("Thickness of that rim, in art pixels (1 = one pixel of the monster's sprite).")]
+        [Range(0.5f, 3f)] public float hoverOutlineWidth = 1f;
 
         [Header("Weapons (Tab cycles)")]
         public WeaponConfig[] weapons = new WeaponConfig[0];

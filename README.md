@@ -70,6 +70,7 @@ you bind to its buttons.
 | Right mouse | Bound action (default: charged attack) |
 | `Q` / middle mouse | Lock on: the hovered monster, else the best one in front. Press again to release |
 | `E` | Next target |
+| Hover a monster | Red outline: that's what a click or `Q` will target |
 | Click a monster | Lock it (the click also attacks) |
 | Click an item / `F` | Pick up. If it's out of reach, you walk there first. Gold: walk over it |
 | `I` | Inventory: drag to move/equip, drag outside to drop, right-click to use/equip. Mouse bindings are set here |

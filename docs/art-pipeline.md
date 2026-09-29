@@ -33,6 +33,9 @@ one helmet drawing gives iron, gold and bronze variants. Weapons are drawn in fu
 tint white.
 
 ## Animation (next step)
+
+> Being replaced: the plan for real frames (64×64 canvas, anchors for hats and weapons,
+> Aseprite pipeline, phase-tagged attacks) is in `docs/specs/sword-animation-paperdoll.md`.
 Today each facing has a single frame; SpriteBillboard adds bob, squash and lean in code. When
 real frames arrive:
 

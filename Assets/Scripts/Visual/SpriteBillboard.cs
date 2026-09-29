@@ -65,6 +65,14 @@ namespace Vela.Visual
         private float airHeight;
         private float pausedUntil;
 
+        // Pixel outline (hovered monster): four copies of the sprite in a solid color, nudged one
+        // art pixel up/down/left/right and pushed just behind it, so only the rim shows.
+        private static readonly Vector2[] OutlineOffsets = { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+        private SpriteRenderer[] outline;
+        private bool outlineOn;
+        private Color outlineColor = Color.red;
+        private float outlineWidth = 1f;
+
         /// Hold the current pose (squash, animation frame) for a local hit-stop.
         public void HitPause(float seconds) => pausedUntil = Mathf.Max(pausedUntil, Time.unscaledTime + seconds);
 
@@ -167,6 +175,14 @@ namespace Vela.Visual
         public void SetScaleMultiplier(float scale) => scaleMultiplier = Mathf.Max(0.05f, scale);
 
         public void SetFade(float alpha) => fade = Mathf.Clamp01(alpha);
+
+        /// Solid-color rim around the sprite, `widthPixels` art pixels thick (hover highlight).
+        public void SetOutline(bool on, Color color, float widthPixels = 1f)
+        {
+            outlineOn = on;
+            outlineColor = color;
+            outlineWidth = Mathf.Max(0.25f, widthPixels);
+        }
 
         private void EnsureBuilt()
         {
@@ -338,12 +354,58 @@ namespace Vela.Visual
             color.a *= fade;
             if (blinking && Mathf.Repeat(Time.time * blinkRate, 1f) < 0.5f) color.a *= 0.25f;
             spriteRenderer.color = color;
+            UpdateOutline(baseScale);
 
             if (shadowMaterial != null)
             {
                 if (shadowMaterial.mainTexture == null) shadowMaterial.mainTexture = VelaSettings.Fx.softCircle;
                 shadowMaterial.color = new Color(0f, 0f, 0f, 0.4f * fade);
                 UpdateShadow();
+            }
+        }
+
+        private void UpdateOutline(float baseScale)
+        {
+            var sprite = spriteRenderer.sprite;
+            var show = outlineOn && sprite != null && fade > 0.01f;
+            if (!show)
+            {
+                if (outline != null) foreach (var r in outline) r.enabled = false;
+                return;
+            }
+
+            if (outline == null)
+            {
+                outline = new SpriteRenderer[OutlineOffsets.Length];
+                for (var i = 0; i < outline.Length; i++)
+                {
+                    var go = new GameObject("Outline");
+                    go.transform.SetParent(spriteRoot, false);
+                    var r = go.AddComponent<SpriteRenderer>();
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                    outline[i] = r;
+                }
+            }
+
+            // Offsets are in the sprite's local units (1 art pixel = 1 / pixelsPerUnit). The copies
+            // sit ~1 cm further from the camera so transparency sorting draws them first.
+            var pixel = outlineWidth / Mathf.Max(1f, sprite.pixelsPerUnit);
+            var behind = 0.01f / Mathf.Max(0.001f, baseScale);
+            var rim = outlineColor;
+            rim.a *= spriteRenderer.color.a;
+            for (var i = 0; i < outline.Length; i++)
+            {
+                var r = outline[i];
+                r.enabled = true;
+                r.sprite = sprite;
+                r.flipX = spriteRenderer.flipX;
+                r.sharedMaterial = VelaSettings.FlashMaterial;
+                r.color = rim;
+                r.sortingLayerID = spriteRenderer.sortingLayerID;
+                r.sortingOrder = spriteRenderer.sortingOrder;
+                var o = OutlineOffsets[i] * pixel;
+                r.transform.localPosition = new Vector3(o.x, o.y, behind);
             }
         }
 
