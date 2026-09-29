@@ -18,6 +18,12 @@ namespace Vela.Combat
     [RequireComponent(typeof(Health))]
     public class DamageFeedback : MonoBehaviour
     {
+        // Groups this target's damage numbers so they stack instead of overlapping. A plain counter
+        // instead of GetInstanceID(), which Unity deprecates from 6.4 (EntityId migration).
+        private static int nextStackKey;
+        private int stackKey;
+        private int StackKey => stackKey != 0 ? stackKey : (stackKey = ++nextStackKey);
+
         private Health health;
         private SpriteBillboard billboard;
 
@@ -71,7 +77,7 @@ namespace Vela.Combat
             var numberColor = crit ? feel.critColor : profile.numberColor;
             var numberScale = profile.numberScale * (crit ? feel.critNumberScale : 1f);
             DamageNumbers.SpawnDamage(transform.position + Vector3.up * TopOfHead, info.Amount, numberColor,
-                numberScale, crit, GetInstanceID());
+                numberScale, crit, StackKey);
 
             // Particles
             var sparkColor = crit ? feel.critColor : feel.hitSparkColor;
@@ -99,11 +105,11 @@ namespace Vela.Combat
             var labelY = TopOfHead + 0.6f;
             if (info.IsCounter)
             {
-                DamageNumbers.Spawn(transform.position + Vector3.up * labelY, feel.counterLabel, feel.counterColor, 1.1f, GetInstanceID());
+                DamageNumbers.Spawn(transform.position + Vector3.up * labelY, feel.counterLabel, feel.counterColor, 1.1f, StackKey);
             }
             else if (info.IsPunish)
             {
-                DamageNumbers.Spawn(transform.position + Vector3.up * labelY, feel.punishLabel, feel.punishColor, 1.05f, GetInstanceID());
+                DamageNumbers.Spawn(transform.position + Vector3.up * labelY, feel.punishLabel, feel.punishColor, 1.05f, StackKey);
                 Audio.Sfx.Play(Audio.SfxEvent.Punish, transform.position);
             }
 
@@ -135,7 +141,7 @@ namespace Vela.Combat
             }
 
             DamageNumbers.SpawnDamage(transform.position + Vector3.up * TopOfHead, info.Amount, feel.takenColor,
-                Mathf.Max(1.1f, profile.numberScale), false, GetInstanceID());
+                Mathf.Max(1.1f, profile.numberScale), false, StackKey);
 
             FxManager.HitSpark(info.HitPoint, info.Direction, feel.takenColor,
                 Mathf.RoundToInt(feel.hitSparkCount * Mathf.Max(1f, profile.sparkMultiplier)));

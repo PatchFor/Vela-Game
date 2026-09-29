@@ -25,6 +25,11 @@ namespace Vela.Visual
     /// Put it on the character root (pivot at the feet); it builds its own children.
     public class SpriteBillboard : MonoBehaviour, Vela.Core.IHitPausable
     {
+        // Per-sprite bob offset so hovering monsters don't bob in sync (no GetInstanceID: deprecated in 6.4+).
+        private static int hoverCounter;
+        private float hoverPhase = -1f;
+        private float HoverPhase => hoverPhase >= 0f ? hoverPhase : (hoverPhase = (++hoverCounter * 2.399f) % 6.283f);
+
         [SerializeField] private CharacterVisual visual = new CharacterVisual();
 
         [Tooltip("0 = sprite stands straight up, 1 = sprite fully faces the camera.")]
@@ -259,12 +264,19 @@ namespace Vela.Visual
             stateTime += dt;
             ApplySprite(CurrentFrame());
 
-            // Squash spring back toward 1.
+            // Squash spring back toward 1, sub-stepped: one big step during a frame hitch
+            // (or on a slow PC) makes the spring explode and the sprite fill the screen.
             const float stiffness = 320f;
             const float damping = 18f;
-            var accel = (Vector2.one - squash) * stiffness - squashVelocity * damping;
-            squashVelocity += accel * dt;
-            squash += squashVelocity * dt;
+            const float maxStep = 1f / 120f;
+            for (var left = dt; left > 0f; left -= maxStep)
+            {
+                var h = Mathf.Min(left, maxStep);
+                var accel = (Vector2.one - squash) * stiffness - squashVelocity * damping;
+                squashVelocity += accel * h;
+                squash += squashVelocity * h;
+            }
+            squash = Vector2.Max(new Vector2(0.4f, 0.4f), Vector2.Min(new Vector2(1.8f, 1.8f), squash));
 
             // Procedural motion for single-frame art.
             var bob = 0f;
@@ -348,7 +360,7 @@ namespace Vela.Visual
         private float Hover()
         {
             if (visual.hoverHeight <= 0f) return 0f;
-            return visual.hoverHeight + Mathf.Sin(Time.time * 5f + GetInstanceID()) * 0.12f;
+            return visual.hoverHeight + Mathf.Sin(Time.time * 5f + HoverPhase) * 0.12f;
         }
 
         private void OnDestroy()

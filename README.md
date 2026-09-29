@@ -22,8 +22,9 @@ the Inspector. Every sprite is a placeholder PNG you can replace.
 
 ## 1. Open and build
 
-1. Install **Unity 6000.0 LTS** from Unity Hub. `ProjectVersion.txt` pins `6000.0.32f1`, but any
-   6000.0.x patch works.
+1. Install **Unity 6.3 LTS** from Unity Hub. `ProjectVersion.txt` pins `6000.3.24f1`, but any
+   6000.3.x patch works. Coming from 6000.0: open the project in 6.3 and let Unity upgrade it,
+   then accept the package updates it offers (Input System, Test Framework).
 2. In Unity Hub, choose **Add → Add project from disk** and pick this folder. The first import
    takes a few minutes.
 3. Wait for compilation to finish (no red errors in the Console). If Unity asks to enable

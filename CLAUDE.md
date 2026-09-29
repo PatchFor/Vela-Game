@@ -1,7 +1,8 @@
 # Vela — project rules for Claude Code
 
 2.5D action RPG prototype (reference: *Alabaster Dawn*). Pixel-art sprites standing in a 3D
-world, locked 3/4 camera, Unity 6 LTS (6000.0.x), built-in render pipeline.
+world, locked 3/4 camera, Unity 6.3 LTS (6000.3.x), built-in render pipeline
+(deprecated from 6.5, supported through 6.7 LTS — URP migration is planned).
 
 The person you're working with is the **game director**. They decide how things *feel*;
 you make everything tunable and prove logic with tests. Never claim something "feels good" —
@@ -65,14 +66,15 @@ EditMode tests (pure logic: inventory, loot tables, hit weights, paper-doll laye
 
 ```bash
 # Windows
-"C:/Program Files/Unity/Hub/Editor/6000.0.32f1/Editor/Unity.exe" -batchmode -projectPath . \
+"C:/Program Files/Unity/Hub/Editor/6000.3.24f1/Editor/Unity.exe" -batchmode -projectPath . \
   -runTests -testPlatform EditMode -testResults TestResults/editmode.xml -logFile -
 # macOS
-/Applications/Unity/Hub/Editor/6000.0.32f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath . \
+/Applications/Unity/Hub/Editor/6000.3.24f1/Unity.app/Contents/MacOS/Unity -batchmode -projectPath . \
   -runTests -testPlatform EditMode -testResults TestResults/editmode.xml -logFile -
 ```
 
-Unity must be closed for batchmode on the same project. In the editor: Window ▸ General ▸
+Unity must be closed for batchmode on the same project. Don't use `Object.GetInstanceID()`
+(deprecated from 6.4, removed in 6.5) — key by the object itself or a counter. In the editor: Window ▸ General ▸
 Test Runner ▸ EditMode ▸ Run All.
 
 Write a test for every rule in a spec's **Edge cases** section that doesn't need a rendered
