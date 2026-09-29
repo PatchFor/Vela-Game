@@ -47,6 +47,11 @@ the Inspector. Every sprite is a placeholder PNG you can replace.
   stops every script and the menu from loading.
 - If a monster or the player can't be seen but the HUD shows, run
   **Vela → Regenerate Placeholder Art**.
+- **If you see an old version of the game** (no paper-doll player, no hover outline, F6 does
+  nothing): the scene on your disk is stale. The scene is generated and isn't stored in git,
+  so a leftover copy from an older clone stays until it's rebuilt. Run
+  **Vela → Build Combat Prototype Scene**, then press Play. If you once chose "Keep old scene",
+  Unity remembers that answer, so use the menu item.
 
 Rebuilding the scene **keeps your config assets and any sprites you swapped in**. Two other
 menu items help:

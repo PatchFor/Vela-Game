@@ -60,3 +60,9 @@ Thumbs.db
 # JetBrains / VS Code
 .idea/
 .vscode/
+
+# Vela: the combat scene is generated from code (Vela ▸ Build Combat Prototype Scene / first Play).
+# Committing it made clones open an old build of the game.
+/Assets/Scenes/CombatPrototype.unity
+/Assets/Scenes/CombatPrototype.unity.meta
+/Assets/Scenes/.combat_scene_version
